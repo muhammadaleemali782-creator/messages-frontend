@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Password Reset Requests</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .admin-wrap{max-width:720px;margin:0 auto;padding:40px 20px;}
+  .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+  .req-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:14px;}
+  .req-card .row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
+  .req-card .label{color:var(--text-faint);}
+  .result-box{background:#F0F6F4;border:1px solid #D7E8E3;border-radius:8px;padding:14px;margin-top:12px;font-size:13px;}
+  .result-box .pw{font-family:monospace;font-size:15px;font-weight:700;color:var(--teal-dark);}
+</style>
+</head>
+<body style="overflow:auto;height:auto;">
+
+<div id="adminAuthScreen" class="auth-screen">
+  <div class="auth-card">
+    <h2 class="auth-title">Admin Login</h2>
+    <p class="auth-sub">Ye panel sirf admin ke liye hai.</p>
+    <input id="adminUsername" class="auth-input" placeholder="Username" autocomplete="username">
+    <input id="adminPassword" type="password" class="auth-input" placeholder="Password" autocomplete="current-password">
+    <button id="adminLoginBtn" type="button" class="send-btn full">Login</button>
+    <div id="adminAuthMsg" class="auth-error"></div>
+  </div>
+</div>
+
+<div id="adminPanel" class="admin-wrap hidden">
+  <div class="admin-header">
+    <h2>Pending Password Reset Requests</h2>
+    <div id="adminLogoutBtn" class="logout-link">Logout</div>
+  </div>
+  <div id="requestList"></div>
+</div>
+
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

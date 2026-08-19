@@ -29,21 +29,15 @@
     <div id="authMsg" class="auth-error"></div>
 
     <div id="forgotBox" class="forgot-box">
-      <div id="forgotStep1">
-        <select id="forgotProduct" class="auth-input">
-          <option value="ecommerce">Ecommerce</option>
-          <option value="education">Education</option>
-          <option value="chat">Chat</option>
-          <option value="payment">Payment</option>
-        </select>
-        <input id="forgotIdentifier" class="auth-input" placeholder="Apna Email / User ID daale">
-        <button id="requestOtpBtn" type="button" class="send-btn full">Code Bheje</button>
-      </div>
-      <div id="forgotStep2" class="hidden">
-        <input id="otpCode" class="auth-input" placeholder="6-digit code" inputmode="numeric" maxlength="6">
-        <input id="newPass" type="password" class="auth-input" placeholder="Naya password">
-        <button id="submitResetBtn" type="button" class="send-btn full">Password Reset Karein</button>
-      </div>
+      <select id="forgotProduct" class="auth-input">
+        <option value="ecommerce">Ecommerce</option>
+        <option value="education">Education</option>
+        <option value="chat">Chat</option>
+        <option value="payment">Payment</option>
+      </select>
+      <input id="forgotIdentifier" class="auth-input" placeholder="Apna Email / User ID daale">
+      <input id="forgotContact" class="auth-input" placeholder="WhatsApp number (optional, admin isi pe reply karega)">
+      <button id="requestResetBtn" type="button" class="send-btn full">Request Bhejein</button>
       <div id="forgotMsg" class="forgot-msg"></div>
     </div>
   </div>

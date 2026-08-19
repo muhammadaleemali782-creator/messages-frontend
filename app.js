@@ -49,35 +49,19 @@ async function submitAuth(){
 
 function showForgot(){ document.getElementById('forgotBox').classList.add('show'); }
 
-async function requestOtp(){
+async function requestReset(){
   const product = document.getElementById('forgotProduct').value;
   const identifier = document.getElementById('forgotIdentifier').value.trim();
+  const contact = document.getElementById('forgotContact').value.trim();
   const msgEl = document.getElementById('forgotMsg');
   try{
-    await fetch(`${API_BASE}/otp/send`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ product, identifier }) });
-    msgEl.style.color = 'var(--teal-dark)';
-    msgEl.textContent = 'Agar ye account registered hai, code bhej diya gaya hai.';
-    document.getElementById('forgotStep1').classList.add('hidden');
-    document.getElementById('forgotStep2').classList.remove('hidden');
-  }catch(e){ msgEl.style.color='var(--accent-red)'; msgEl.textContent = 'Kuch galat ho gaya.'; }
-}
-
-async function submitReset(){
-  const product = document.getElementById('forgotProduct').value;
-  const identifier = document.getElementById('forgotIdentifier').value.trim();
-  const otp = document.getElementById('otpCode').value.trim();
-  const newPassword = document.getElementById('newPass').value;
-  const msgEl = document.getElementById('forgotMsg');
-  try{
-    const res = await fetch(`${API_BASE}/otp/reset-password`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
-      body: JSON.stringify({ product, identifier, otp, newPassword })
+    await fetch(`${API_BASE}/reset-request`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ product, identifier, contact })
     });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error);
     msgEl.style.color = 'var(--teal-dark)';
-    msgEl.textContent = 'Password reset ho gaya! Ab login karein.';
-  }catch(e){ msgEl.style.color='var(--accent-red)'; msgEl.textContent = e.message; }
+    msgEl.textContent = 'Request bhej diya gaya hai. Admin aapse contact karega naya password ke saath.';
+  }catch(e){ msgEl.style.color='var(--accent-red)'; msgEl.textContent = 'Kuch galat ho gaya.'; }
 }
 
 async function enterApp(){
@@ -187,8 +171,7 @@ document.getElementById('tabLogin').addEventListener('click', () => switchAuthTa
 document.getElementById('tabSignup').addEventListener('click', () => switchAuthTab('signup'));
 document.getElementById('authSubmitBtn').addEventListener('click', submitAuth);
 document.getElementById('forgotLink').addEventListener('click', (e) => { e.preventDefault(); showForgot(); });
-document.getElementById('requestOtpBtn').addEventListener('click', requestOtp);
-document.getElementById('submitResetBtn').addEventListener('click', submitReset);
+document.getElementById('requestResetBtn').addEventListener('click', requestReset);
 document.getElementById('composeBtn').addEventListener('click', openCompose);
 document.getElementById('composeCloseBtn').addEventListener('click', closeCompose);
 document.getElementById('sendComposeBtn').addEventListener('click', sendCompose);
