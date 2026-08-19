@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <h2 class="auth-title">Login karein</h2>
+    <p class="auth-sub">Product select karke apna account access karein.</p>
+    <div class="auth-tabs">
+      <button id="tabLogin" type="button" class="auth-tab active">Login</button>
+      <button id="tabSignup" type="button" class="auth-tab">Sign up</button>
+    </div>
+    <select id="authProduct" class="auth-input">
+      <option value="ecommerce">Ecommerce</option>
+      <option value="education">Education</option>
+      <option value="chat">Chat</option>
+      <option value="payment">Payment</option>
+    </select>
+    <input id="authIdentifier" class="auth-input" placeholder="Email / User ID" autocomplete="username">
+    <input id="authPassword" type="password" class="auth-input" placeholder="Password (min 8 chars)" autocomplete="current-password">
+    <button id="authSubmitBtn" type="button" class="send-btn full">Continue</button>
+    <div class="auth-center"><a id="forgotLink" href="#" class="link">Password bhool gaye?</a></div>
+    <div id="authMsg" class="auth-error"></div>
+
+    <div id="forgotBox" class="forgot-box">
+      <div id="forgotStep1">
+        <select id="forgotProduct" class="auth-input">
+          <option value="ecommerce">Ecommerce</option>
+          <option value="education">Education</option>
+          <option value="chat">Chat</option>
+          <option value="payment">Payment</option>
+        </select>
+        <input id="forgotIdentifier" class="auth-input" placeholder="Apna Email / User ID daale">
+        <button id="requestOtpBtn" type="button" class="send-btn full">Code Bheje</button>
+      </div>
+      <div id="forgotStep2" class="hidden">
+        <input id="otpCode" class="auth-input" placeholder="6-digit code" inputmode="numeric" maxlength="6">
+        <input id="newPass" type="password" class="auth-input" placeholder="Naya password">
+        <button id="submitResetBtn" type="button" class="send-btn full">Password Reset Karein</button>
+      </div>
+      <div id="forgotMsg" class="forgot-msg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="app hidden" id="mainApp">
+
+  <div class="sidebar">
+    <div class="acct">
+      <div class="avatar" id="acctAvatar">U</div>
+      <div>
+        <div class="acct-name" id="acctName">Aap</div>
+        <div class="acct-sub" id="acctSub">-</div>
+      </div>
+    </div>
+    <button id="composeBtn" type="button" class="compose-btn">Compose</button>
+    <ul class="nav">
+      <li class="active"><span class="left"><span class="ico">Inbox</span></span><span id="inboxCount"></span></li>
+      <li><span class="left"><span class="ico">Starred</span></span></li>
+      <li><span class="left"><span class="ico">Sent</span></span></li>
+      <li><span class="left"><span class="ico">Drafts</span></span></li>
+      <li><span class="left"><span class="ico">Archive</span></span></li>
+      <li><span class="left"><span class="ico">Spam</span></span></li>
+      <li><span class="left"><span class="ico">Trash</span></span></li>
+    </ul>
+    <div class="nav-section-label">Labels</div>
+    <ul class="nav">
+      <li><span class="left"><span class="ico">Ecommerce</span></span></li>
+      <li><span class="left"><span class="ico">Education</span></span></li>
+      <li><span class="left"><span class="ico">Chat</span></span></li>
+      <li><span class="left"><span class="ico">Payment</span></span></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div id="logoutBtn" class="logout-link">Logout</div>
+    </div>
+  </div>
+
+  <div class="list-pane">
+    <div class="list-head">
+      <h1>Inbox</h1>
+      <div class="search">Search</div>
+    </div>
+    <div class="list-scroll" id="listScroll"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="read-pane" id="readPane">
+    <div class="no-selection">Koi message select karein padhne ke liye</div>
+  </div>
+</div>
+
+<div class="overlay" id="composeOverlay">
+  <div class="compose-modal">
+    <div class="compose-head"><h3>New Message</h3><button id="composeCloseBtn" type="button" class="icon-btn">X</button></div>
+    <div class="compose-row"><label>To:</label><input id="cTo" placeholder="recipient identifier"></div>
+    <div class="compose-row"><label>CC:</label><input id="cCc" placeholder="(optional)"></div>
+    <div class="compose-row"><label>BCC:</label><input id="cBcc" placeholder="(optional)"></div>
+    <div class="compose-row"><label>Subj:</label><input id="cSubject" placeholder="Subject"></div>
+    <div class="compose-body"><textarea id="cBody" placeholder="Likhna shuru karein..."></textarea></div>
+    <div class="compose-msg" id="composeMsg"></div>
+    <div class="compose-foot"><button id="sendComposeBtn" type="button" class="send-btn">Send</button></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
