@@ -11,32 +11,33 @@
 <div id="authScreen" class="auth-screen">
   <div class="auth-card">
     <h2 class="auth-title">Login karein</h2>
-    <p class="auth-sub">Product select karke apna account access karein.</p>
+    <p class="auth-sub">Apna email/naam aur password daalein.</p>
     <div class="auth-tabs">
       <button id="tabLogin" type="button" class="auth-tab active">Login</button>
       <button id="tabSignup" type="button" class="auth-tab">Sign up</button>
     </div>
-    <select id="authProduct" class="auth-input">
-      <option value="ecommerce">Ecommerce</option>
-      <option value="education">Education</option>
-      <option value="chat">Chat</option>
-      <option value="payment">Payment</option>
-    </select>
-    <input id="authIdentifier" class="auth-input" placeholder="Email / User ID" autocomplete="username">
-    <input id="authPassword" type="password" class="auth-input" placeholder="Password (min 8 chars)" autocomplete="current-password">
+
+    <!-- LOGIN fields -->
+    <div id="loginFields">
+      <input id="authIdentifier" class="auth-input" placeholder="Email (jaise naam@educa.com)" autocomplete="username">
+      <input id="authPassword" type="password" class="auth-input" placeholder="Password" autocomplete="current-password">
+    </div>
+
+    <!-- SIGNUP fields -->
+    <div id="signupFields" class="hidden">
+      <input id="signupName" class="auth-input" placeholder="Apna naam daalein">
+      <input id="signupPhone" class="auth-input" placeholder="Phone number (password reset ke liye)" inputmode="numeric">
+      <input id="signupPassword" type="password" class="auth-input" placeholder="Password (min 8 chars)" autocomplete="new-password">
+    </div>
+
     <button id="authSubmitBtn" type="button" class="send-btn full">Continue</button>
+    <div id="generatedEmailMsg" class="forgot-msg"></div>
     <div class="auth-center"><a id="forgotLink" href="#" class="link">Password bhool gaye?</a></div>
     <div id="authMsg" class="auth-error"></div>
 
     <div id="forgotBox" class="forgot-box">
-      <select id="forgotProduct" class="auth-input">
-        <option value="ecommerce">Ecommerce</option>
-        <option value="education">Education</option>
-        <option value="chat">Chat</option>
-        <option value="payment">Payment</option>
-      </select>
-      <input id="forgotIdentifier" class="auth-input" placeholder="Apna Email / User ID daale">
-      <input id="forgotContact" class="auth-input" placeholder="WhatsApp number (optional, admin isi pe reply karega)">
+      <input id="forgotIdentifier" class="auth-input" placeholder="Apna Email daale (jaise naam@educa.com)">
+      <input id="forgotPhone" class="auth-input" placeholder="Signup wala phone number daale" inputmode="numeric">
       <button id="requestResetBtn" type="button" class="send-btn full">Request Bhejein</button>
       <div id="forgotMsg" class="forgot-msg"></div>
     </div>

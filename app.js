@@ -28,39 +28,60 @@ function switchAuthTab(mode){
   authMode = mode;
   document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
   document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+  document.getElementById('loginFields').classList.toggle('hidden', mode !== 'login');
+  document.getElementById('signupFields').classList.toggle('hidden', mode !== 'signup');
+  document.getElementById('generatedEmailMsg').textContent = '';
 }
 
 async function submitAuth(){
-  const product = document.getElementById('authProduct').value;
-  const identifier = document.getElementById('authIdentifier').value.trim();
-  const password = document.getElementById('authPassword').value;
   const msgEl = document.getElementById('authMsg');
+  const genEl = document.getElementById('generatedEmailMsg');
   msgEl.textContent = '';
-  try{
-    const res = await fetch(`${API_BASE}/auth/${authMode}`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
-      body: JSON.stringify({ product, identifier, password })
-    });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error || 'Failed');
-    await enterApp();
-  }catch(e){ msgEl.textContent = e.message; }
+  genEl.textContent = '';
+
+  if (authMode === 'login') {
+    const identifier = document.getElementById('authIdentifier').value.trim();
+    const password = document.getElementById('authPassword').value;
+    try{
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+        body: JSON.stringify({ identifier, password })
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'Failed');
+      await enterApp();
+    }catch(e){ msgEl.textContent = e.message; }
+  } else {
+    const name = document.getElementById('signupName').value.trim();
+    const phone = document.getElementById('signupPhone').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    try{
+      const res = await fetch(`${API_BASE}/auth/signup`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+        body: JSON.stringify({ name, password, phone })
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'Failed');
+      genEl.style.color = 'var(--teal-dark)';
+      genEl.textContent = `Aapka email ban gaya: ${data.identifier} - login ke liye yaad rakhein.`;
+      await enterApp();
+    }catch(e){ msgEl.textContent = e.message; }
+  }
 }
 
 function showForgot(){ document.getElementById('forgotBox').classList.add('show'); }
 
 async function requestReset(){
-  const product = document.getElementById('forgotProduct').value;
   const identifier = document.getElementById('forgotIdentifier').value.trim();
-  const contact = document.getElementById('forgotContact').value.trim();
+  const phone = document.getElementById('forgotPhone').value.trim();
   const msgEl = document.getElementById('forgotMsg');
   try{
     await fetch(`${API_BASE}/reset-request`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ product, identifier, contact })
+      body: JSON.stringify({ identifier, phone })
     });
     msgEl.style.color = 'var(--teal-dark)';
-    msgEl.textContent = 'Request bhej diya gaya hai. Admin aapse contact karega naya password ke saath.';
+    msgEl.textContent = 'Agar email aur phone match hue, request admin ke paas chali gayi hai.';
   }catch(e){ msgEl.style.color='var(--accent-red)'; msgEl.textContent = 'Kuch galat ho gaya.'; }
 }
 
