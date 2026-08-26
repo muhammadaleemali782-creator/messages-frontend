@@ -6,4 +6,4 @@
 // This is deliberately NOT a secret - it's a public URL, same as any API
 // endpoint a browser talks to. No API keys or credentials belong here; those
 // stay server-side only (see backend/scripts/create-product.js).
-const API_BASE = window.MESSAGES_API_BASE || 'http://localhost:3000';
+const API_BASE = window.MESSAGES_API_BASE || 'https://messages-backend-e6pe.onrender.com';
