@@ -1,23 +1,28 @@
-// app.js
-// Loaded as an external same-origin script (not inline), and every action is
-// bound via addEventListener - never via onclick="" attributes. This is what
-// lets the server's strict Content-Security-Policy (script-src 'self', no
-// unsafe-inline) actually work: inline scripts/handlers are blocked by design,
-// and this file, being an external same-origin resource, is allowed.
-//
-// This file makes no security decisions of its own - it only calls the API
-// and displays results. Every real check (validity, ownership, auth, rate
-// limits) happens server-side; see src/validate.js, src/auth.js, src/api.js.
+// app.js - Full Interactive Engine with Bearer Token & Working Controls
 
 let ME = null;
 let currentInbox = [];
+let starredIds = new Set(JSON.parse(localStorage.getItem('educa_starred_msg_ids') || '[]'));
+let deletedIds = new Set(JSON.parse(localStorage.getItem('educa_deleted_msg_ids') || '[]'));
+let currentFolder = 'inbox';
+let currentLabel = null;
+let searchQuery = '';
 let authMode = 'login';
+let activeSelectedMessage = null;
 
 function initial(name){ return (name||'?').trim()[0]?.toUpperCase() || '?'; }
-function fmtTime(ts){ return new Date(ts*1000).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+function fmtTime(ts){ 
+  const d = typeof ts === 'number' ? new Date(ts*1000) : new Date(ts);
+  return d.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); 
+}
 
-// Escape any server-returned text before inserting into innerHTML - defense in
-// depth against stored XSS, even though the server also strips markup on save.
+function getAuthHeaders(){
+  const token = localStorage.getItem('educa_mail_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
 function esc(str){
   const div = document.createElement('div');
   div.textContent = str ?? '';
@@ -48,7 +53,8 @@ async function submitAuth(){
         body: JSON.stringify({ identifier, password })
       });
       const data = await res.json();
-      if(!res.ok) throw new Error(data.error || 'Failed');
+      if(!res.ok) throw new Error(data.error || 'Login failed');
+      if (data.token) localStorage.setItem('educa_mail_token', data.token);
       await enterApp();
     }catch(e){ msgEl.textContent = e.message; }
   } else {
@@ -61,9 +67,10 @@ async function submitAuth(){
         body: JSON.stringify({ name, password, phone })
       });
       const data = await res.json();
-      if(!res.ok) throw new Error(data.error || 'Failed');
-      genEl.style.color = 'var(--teal-dark)';
-      genEl.textContent = `Aapka email ban gaya: ${data.identifier} - login ke liye yaad rakhein.`;
+      if(!res.ok) throw new Error(data.error || 'Signup failed');
+      if (data.token) localStorage.setItem('educa_mail_token', data.token);
+      genEl.style.color = '#10b981';
+      genEl.textContent = `Aapka account ban gaya: ${data.identifier}`;
       await enterApp();
     }catch(e){ msgEl.textContent = e.message; }
   }
@@ -80,71 +87,148 @@ async function requestReset(){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ identifier, phone })
     });
-    msgEl.style.color = 'var(--teal-dark)';
-    msgEl.textContent = 'Agar email aur phone match hue, request admin ke paas chali gayi hai.';
-  }catch(e){ msgEl.style.color='var(--accent-red)'; msgEl.textContent = 'Kuch galat ho gaya.'; }
+    msgEl.style.color = '#10b981';
+    msgEl.textContent = 'Agar match hua, request submit ho gayi hai.';
+  }catch(e){ msgEl.style.color='#ef4444'; msgEl.textContent = 'Kuch galat ho gaya.'; }
 }
 
 async function enterApp(){
-  const meRes = await fetch(`${API_BASE}/auth/me`, { credentials:'include' });
-  if(!meRes.ok){ return; }
-  ME = await meRes.json();
-  document.getElementById('authScreen').classList.add('hidden');
-  document.getElementById('mainApp').classList.remove('hidden');
-  document.getElementById('acctSub').textContent = `${ME.identifier} - ${ME.product}`;
-  document.getElementById('acctAvatar').textContent = initial(ME.identifier);
-  document.getElementById('acctName').textContent = ME.identifier.split('@')[0];
-  await loadInbox();
+  try {
+    const meRes = await fetch(`${API_BASE}/auth/me`, { 
+      headers: getAuthHeaders(),
+      credentials:'include' 
+    });
+    if(!meRes.ok){ 
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('mainApp').classList.add('hidden');
+      return; 
+    }
+    ME = await meRes.json();
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('acctSub').textContent = `${ME.identifier}`;
+    document.getElementById('acctAvatar').textContent = initial(ME.identifier);
+    document.getElementById('acctName').textContent = ME.identifier.split('@')[0].toUpperCase();
+    await loadInbox();
+  } catch(e) {
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+  }
 }
 
 async function loadInbox(){
   try{
-    const res = await fetch(`${API_BASE}/messages`, { credentials:'include' });
+    const res = await fetch(`${API_BASE}/messages`, { 
+      headers: getAuthHeaders(),
+      credentials:'include' 
+    });
     if(!res.ok) throw new Error('session expired');
-    currentInbox = await res.json();
+    const data = await res.json();
+    currentInbox = Array.isArray(data) ? data : [];
     renderList();
   }catch(e){
-    document.getElementById('listScroll').innerHTML = `<div class="empty">Session expire ho gayi, dobara login karein.</div>`;
+    document.getElementById('listScroll').innerHTML = `<div class="empty">Messages load nahi ho sake. Dobara login karein.</div>`;
   }
 }
 
 async function logout(){
-  await fetch(`${API_BASE}/auth/logout`, { method:'POST', credentials:'include' });
+  try {
+    await fetch(`${API_BASE}/auth/logout`, { method:'POST', headers: getAuthHeaders(), credentials:'include' });
+  } catch(e){}
+  localStorage.removeItem('educa_mail_token');
   location.reload();
 }
 
+function getFilteredMessages(){
+  return currentInbox.filter(m => {
+    const id = String(m.id);
+    if (deletedIds.has(id) && currentFolder !== 'trash') return false;
+    if (currentFolder === 'trash') return deletedIds.has(id);
+    if (currentFolder === 'starred') return starredIds.has(id);
+    if (currentFolder === 'sent') return (m.from || '').toLowerCase().includes((ME?.identifier || '').toLowerCase());
+    
+    if (currentLabel) {
+      const text = `${m.subject || ''} ${m.body || ''}`.toLowerCase();
+      if (!text.includes(currentLabel.toLowerCase())) return false;
+    }
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const match = (m.subject || '').toLowerCase().includes(q) ||
+                    (m.from || '').toLowerCase().includes(q) ||
+                    (m.body || '').toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+}
+
 function renderList(){
-  document.getElementById('inboxCount').textContent = currentInbox.length || '';
+  const filtered = getFilteredMessages();
+  const unreadCount = currentInbox.filter(m => !m.read && !deletedIds.has(String(m.id))).length;
+  document.getElementById('inboxCount').textContent = unreadCount ? String(unreadCount) : '';
+  document.getElementById('starredCount').textContent = starredIds.size ? String(starredIds.size) : '';
+
   const wrap = document.getElementById('listScroll');
-  if(currentInbox.length===0){ wrap.innerHTML = `<div class="empty">Is inbox me abhi koi message nahi hai.</div>`; return; }
-  wrap.innerHTML = `<div class="list-group-label">Primary</div>` + currentInbox.map((m)=>`
-    <div class="msg-item" data-id="${esc(m.id)}">
+  if(filtered.length === 0){ 
+    wrap.innerHTML = `<div class="empty">Is folder me koi message nahi hai.</div>`; 
+    return; 
+  }
+
+  wrap.innerHTML = `<div class="list-group-label">${currentFolder.toUpperCase()} (${filtered.length})</div>` + filtered.map((m)=>{
+    const isStarred = starredIds.has(String(m.id));
+    return `
+    <div class="msg-item ${activeSelectedMessage === m.id ? 'selected' : ''}" data-id="${esc(m.id)}">
       <div class="av">${esc(initial(m.from))}</div>
       <div class="body">
         <div class="row1">
           <div class="from">${esc(m.from)}${!m.read?'<span class="badge">new</span>':''}</div>
-          <div class="time">${esc(fmtTime(m.ts))}</div>
+          <div class="time">
+            ${isStarred ? '<span style="color:#fbbf24; margin-right:4px;">★</span>' : ''}
+            ${esc(fmtTime(m.ts))}
+          </div>
         </div>
         <div class="subj">${esc(m.subject)}</div>
       </div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 async function openThread(id, clickedEl){
+  activeSelectedMessage = id;
   document.querySelectorAll('.msg-item').forEach(el=>el.classList.remove('selected'));
   if (clickedEl) clickedEl.classList.add('selected');
-  const res = await fetch(`${API_BASE}/message/${encodeURIComponent(id)}`, { credentials:'include' });
-  if(!res.ok){ document.getElementById('readPane').innerHTML = `<div class="no-selection">Ye message nahi khul saka.</div>`; return; }
-  const msg = await res.json();
+  
+  let msg = currentInbox.find(m => String(m.id) === String(id));
+  try {
+    const res = await fetch(`${API_BASE}/message/${encodeURIComponent(id)}`, { 
+      headers: getAuthHeaders(),
+      credentials:'include' 
+    });
+    if (res.ok) {
+      msg = await res.json();
+    }
+  } catch(e){}
+
+  if(!msg){ 
+    document.getElementById('readPane').innerHTML = `<div class="no-selection">Ye message nahi khul saka.</div>`; 
+    return; 
+  }
+
+  msg.read = true;
+  const isStarred = starredIds.has(String(id));
+
   document.getElementById('readPane').innerHTML = `
     <div class="read-toolbar">
-      <span>Reply</span><span>Forward</span><span>Star</span><span>Delete</span>
+      <button id="replyBtn" class="toolbar-btn" type="button">↩ Reply</button>
+      <button id="forwardBtn" class="toolbar-btn" type="button">↪ Forward</button>
+      <button id="starBtn" class="toolbar-btn ${isStarred ? 'active-star' : ''}" type="button">${isStarred ? '★ Starred' : '☆ Star'}</button>
+      <button id="deleteBtn" class="toolbar-btn text-danger" type="button">🗑️ Delete</button>
       <div class="spacer"></div>
       <span class="thread-time">${esc(fmtTime(msg.ts))}</span>
     </div>
     <div class="read-scroll">
-      <div class="summary-box"><div class="label">Summary</div>${esc(msg.subject)}</div>
+      <div class="summary-box"><div class="label">Subject</div>${esc(msg.subject)}</div>
       <div class="thread-msg">
         <div class="head">
           <div class="av">${esc(initial(msg.from))}</div>
@@ -158,15 +242,49 @@ async function openThread(id, clickedEl){
       </div>
     </div>
   `;
-  const item = currentInbox.find(m=>m.id===id);
-  if(item) item.read = true;
+
+  // Bind thread action buttons
+  document.getElementById('replyBtn').addEventListener('click', () => {
+    openCompose(msg.from, `Re: ${msg.subject}`, `\n\n--- Original Message from ${msg.from} ---\n${msg.body}`);
+  });
+
+  document.getElementById('forwardBtn').addEventListener('click', () => {
+    openCompose('', `Fwd: ${msg.subject}`, `\n\n---------- Forwarded message ----------\nFrom: ${msg.from}\nDate: ${fmtTime(msg.ts)}\nSubject: ${msg.subject}\nTo: ${msg.to}\n\n${msg.body}`);
+  });
+
+  document.getElementById('starBtn').addEventListener('click', () => {
+    const sId = String(id);
+    if (starredIds.has(sId)) {
+      starredIds.delete(sId);
+    } else {
+      starredIds.add(sId);
+    }
+    localStorage.setItem('educa_starred_msg_ids', JSON.stringify(Array.from(starredIds)));
+    openThread(id, clickedEl);
+    renderList();
+  });
+
+  document.getElementById('deleteBtn').addEventListener('click', () => {
+    const dId = String(id);
+    deletedIds.add(dId);
+    localStorage.setItem('educa_deleted_msg_ids', JSON.stringify(Array.from(deletedIds)));
+    document.getElementById('readPane').innerHTML = `<div class="no-selection">Message deleted 🗑️</div>`;
+    activeSelectedMessage = null;
+    renderList();
+  });
 }
 
-function openCompose(){
+function openCompose(to = '', subject = '', body = ''){
+  document.getElementById('cTo').value = to;
+  document.getElementById('cSubject').value = subject;
+  document.getElementById('cBody').value = body;
   document.getElementById('composeOverlay').classList.add('show');
   document.getElementById('composeMsg').textContent = '';
 }
-function closeCompose(){ document.getElementById('composeOverlay').classList.remove('show'); }
+
+function closeCompose(){ 
+  document.getElementById('composeOverlay').classList.remove('show'); 
+}
 
 async function sendCompose(){
   const to = document.getElementById('cTo').value.trim();
@@ -177,34 +295,74 @@ async function sendCompose(){
   msgEl.textContent = 'Bhej rahe hain...';
   try{
     const res = await fetch(`${API_BASE}/mail/send`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      method:'POST', 
+      headers: getAuthHeaders(), 
+      credentials:'include',
       body: JSON.stringify({ to, subject, body })
     });
     const data = await res.json();
-    if(!res.ok) throw new Error(data.error || 'send failed');
-    msgEl.textContent = 'Bhej diya gaya';
-    setTimeout(closeCompose, 800);
-  }catch(e){ msgEl.textContent = 'Error: ' + e.message; }
+    if(!res.ok) throw new Error(data.error || 'Send failed');
+    msgEl.style.color = '#10b981';
+    msgEl.textContent = '✓ Message bhej diya gaya!';
+    setTimeout(() => {
+      closeCompose();
+      loadInbox();
+    }, 600);
+  }catch(e){ 
+    msgEl.style.color = '#ef4444';
+    msgEl.textContent = 'Error: ' + e.message; 
+  }
 }
 
-// ---- bind everything, no inline handlers anywhere ----
+// ── Bind UI Events ──
 document.getElementById('tabLogin').addEventListener('click', () => switchAuthTab('login'));
 document.getElementById('tabSignup').addEventListener('click', () => switchAuthTab('signup'));
 document.getElementById('authSubmitBtn').addEventListener('click', submitAuth);
 document.getElementById('forgotLink').addEventListener('click', (e) => { e.preventDefault(); showForgot(); });
 document.getElementById('requestResetBtn').addEventListener('click', requestReset);
-document.getElementById('composeBtn').addEventListener('click', openCompose);
+document.getElementById('composeBtn').addEventListener('click', () => openCompose());
 document.getElementById('composeCloseBtn').addEventListener('click', closeCompose);
 document.getElementById('sendComposeBtn').addEventListener('click', sendCompose);
 document.getElementById('logoutBtn').addEventListener('click', logout);
 
-// event delegation for dynamically-rendered message list items
+// Sidebar Folder Navigation
+document.getElementById('sidebarNav').addEventListener('click', (e) => {
+  const item = e.target.closest('.nav-item');
+  if (!item) return;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.label-item').forEach(el => el.classList.remove('active'));
+  item.classList.add('active');
+  currentFolder = item.dataset.folder || 'inbox';
+  currentLabel = null;
+  document.getElementById('currentFolderTitle').textContent = item.querySelector('.ico').textContent.trim();
+  renderList();
+});
+
+// Labels Navigation
+document.getElementById('labelsNav').addEventListener('click', (e) => {
+  const item = e.target.closest('.label-item');
+  if (!item) return;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.label-item').forEach(el => el.classList.remove('active'));
+  item.classList.add('active');
+  currentLabel = item.dataset.label;
+  document.getElementById('currentFolderTitle').textContent = `Label: ${currentLabel}`;
+  renderList();
+});
+
+// Search Filter Input
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  renderList();
+});
+
+// Message List item click
 document.getElementById('listScroll').addEventListener('click', (e) => {
   const item = e.target.closest('.msg-item');
   if (item) openThread(item.dataset.id, item);
 });
 
-// allow Enter key to submit auth form
+// Enter key in auth
 ['authIdentifier','authPassword'].forEach(id => {
   document.getElementById(id).addEventListener('keydown', (e) => {
     if (e.key === 'Enter') submitAuth();

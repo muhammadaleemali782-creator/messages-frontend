@@ -3,15 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Messages</title>
+<title>EDUCA Mail · Messages</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="authScreen" class="auth-screen">
   <div class="auth-card">
+    <div class="auth-logo-badge">
+      <span class="auth-logo-icon">📧</span>
+      <span class="auth-logo-text">EDUCA MAIL</span>
+    </div>
     <h2 class="auth-title">Login karein</h2>
-    <p class="auth-sub">Apna email/naam aur password daalein.</p>
+    <p class="auth-sub">Apna EDUCA email / user ID aur password daalein.</p>
     <div class="auth-tabs">
       <button id="tabLogin" type="button" class="auth-tab active">Login</button>
       <button id="tabSignup" type="button" class="auth-tab">Sign up</button>
@@ -19,7 +23,7 @@
 
     <!-- LOGIN fields -->
     <div id="loginFields">
-      <input id="authIdentifier" class="auth-input" placeholder="Email (jaise naam@educa.com)" autocomplete="username">
+      <input id="authIdentifier" class="auth-input" placeholder="Email / ID (jaise DS001 ya naam@educaveda.com)" autocomplete="username">
       <input id="authPassword" type="password" class="auth-input" placeholder="Password" autocomplete="current-password">
     </div>
 
@@ -30,16 +34,23 @@
       <input id="signupPassword" type="password" class="auth-input" placeholder="Password (min 8 chars)" autocomplete="new-password">
     </div>
 
-    <button id="authSubmitBtn" type="button" class="send-btn full">Continue</button>
+    <button id="authSubmitBtn" type="button" class="send-btn full">Continue ➔</button>
     <div id="generatedEmailMsg" class="forgot-msg"></div>
     <div class="auth-center"><a id="forgotLink" href="#" class="link">Password bhool gaye?</a></div>
     <div id="authMsg" class="auth-error"></div>
 
     <div id="forgotBox" class="forgot-box">
-      <input id="forgotIdentifier" class="auth-input" placeholder="Apna Email daale (jaise naam@educa.com)">
+      <input id="forgotIdentifier" class="auth-input" placeholder="Apna Email daale (jaise naam@educaveda.com)">
       <input id="forgotPhone" class="auth-input" placeholder="Signup wala phone number daale" inputmode="numeric">
       <button id="requestResetBtn" type="button" class="send-btn full">Request Bhejein</button>
       <div id="forgotMsg" class="forgot-msg"></div>
+    </div>
+
+    <!-- Return to main store website -->
+    <div class="auth-footer-link">
+      <a href="https://educa-store.vercel.app" target="_blank" rel="noopener noreferrer" class="website-btn">
+        🌐 Visit EDUCA VEDA Website ↗
+      </a>
     </div>
   </div>
 </div>
@@ -54,32 +65,37 @@
         <div class="acct-sub" id="acctSub">-</div>
       </div>
     </div>
-    <button id="composeBtn" type="button" class="compose-btn">Compose</button>
-    <ul class="nav">
-      <li class="active"><span class="left"><span class="ico">Inbox</span></span><span id="inboxCount"></span></li>
-      <li><span class="left"><span class="ico">Starred</span></span></li>
-      <li><span class="left"><span class="ico">Sent</span></span></li>
-      <li><span class="left"><span class="ico">Drafts</span></span></li>
-      <li><span class="left"><span class="ico">Archive</span></span></li>
-      <li><span class="left"><span class="ico">Spam</span></span></li>
-      <li><span class="left"><span class="ico">Trash</span></span></li>
+    <button id="composeBtn" type="button" class="compose-btn">✏️ Compose</button>
+    <ul class="nav" id="sidebarNav">
+      <li class="nav-item active" data-folder="inbox"><span class="left"><span class="ico">📥 Inbox</span></span><span id="inboxCount"></span></li>
+      <li class="nav-item" data-folder="starred"><span class="left"><span class="ico">⭐ Starred</span></span><span id="starredCount"></span></li>
+      <li class="nav-item" data-folder="sent"><span class="left"><span class="ico">📤 Sent</span></span></li>
+      <li class="nav-item" data-folder="drafts"><span class="left"><span class="ico">📝 Drafts</span></span></li>
+      <li class="nav-item" data-folder="archive"><span class="left"><span class="ico">📦 Archive</span></span></li>
+      <li class="nav-item" data-folder="spam"><span class="left"><span class="ico">🚫 Spam</span></span></li>
+      <li class="nav-item" data-folder="trash"><span class="left"><span class="ico">🗑️ Trash</span></span></li>
     </ul>
     <div class="nav-section-label">Labels</div>
-    <ul class="nav">
-      <li><span class="left"><span class="ico">Ecommerce</span></span></li>
-      <li><span class="left"><span class="ico">Education</span></span></li>
-      <li><span class="left"><span class="ico">Chat</span></span></li>
-      <li><span class="left"><span class="ico">Payment</span></span></li>
+    <ul class="nav" id="labelsNav">
+      <li class="label-item" data-label="Ecommerce"><span class="left"><span class="ico">🛒 Ecommerce</span></span></li>
+      <li class="label-item" data-label="Education"><span class="left"><span class="ico">🎓 Education</span></span></li>
+      <li class="label-item" data-label="Security"><span class="left"><span class="ico">🔒 Security</span></span></li>
+      <li class="label-item" data-label="Payment"><span class="left"><span class="ico">💰 Payment</span></span></li>
     </ul>
     <div class="sidebar-footer">
-      <div id="logoutBtn" class="logout-link">Logout</div>
+      <a href="https://educa-store.vercel.app" target="_blank" rel="noopener noreferrer" class="store-link">
+        🌐 Visit Store Website ↗
+      </a>
+      <div id="logoutBtn" class="logout-link">🚪 Logout</div>
     </div>
   </div>
 
   <div class="list-pane">
     <div class="list-head">
-      <h1>Inbox</h1>
-      <div class="search">Search</div>
+      <h1 id="currentFolderTitle">Inbox</h1>
+      <div class="search-box">
+        <input id="searchInput" type="text" placeholder="🔍 Search messages..." class="search-input" />
+      </div>
     </div>
     <div class="list-scroll" id="listScroll"><div class="empty">Loading...</div></div>
   </div>
@@ -91,14 +107,17 @@
 
 <div class="overlay" id="composeOverlay">
   <div class="compose-modal">
-    <div class="compose-head"><h3>New Message</h3><button id="composeCloseBtn" type="button" class="icon-btn">X</button></div>
-    <div class="compose-row"><label>To:</label><input id="cTo" placeholder="recipient identifier"></div>
+    <div class="compose-head">
+      <h3>✉️ New Message</h3>
+      <button id="composeCloseBtn" type="button" class="icon-btn">✕</button>
+    </div>
+    <div class="compose-row"><label>To:</label><input id="cTo" placeholder="recipient (jaise DS001 ya naam@educaveda.com)"></div>
     <div class="compose-row"><label>CC:</label><input id="cCc" placeholder="(optional)"></div>
     <div class="compose-row"><label>BCC:</label><input id="cBcc" placeholder="(optional)"></div>
     <div class="compose-row"><label>Subj:</label><input id="cSubject" placeholder="Subject"></div>
     <div class="compose-body"><textarea id="cBody" placeholder="Likhna shuru karein..."></textarea></div>
     <div class="compose-msg" id="composeMsg"></div>
-    <div class="compose-foot"><button id="sendComposeBtn" type="button" class="send-btn">Send</button></div>
+    <div class="compose-foot"><button id="sendComposeBtn" type="button" class="send-btn">Send ➔</button></div>
   </div>
 </div>
 
