@@ -441,8 +441,12 @@ async function openThread(id, clickedEl){
   const isArchived = archivedIds.has(String(id));
   const isTrashed = trashedIds.has(String(id));
 
+  // Determine tag
+  const isSecurity = /otp|security|password|verify/i.test(`${msg.subject || ''} ${msg.body || ''}`);
+  const tagLabel = isSecurity ? 'Security &amp; OTP' : 'Official Notice';
+
   document.getElementById('readPane').innerHTML = `
-    <!-- Top Gmail-style Toolbar -->
+    <!-- Top Toolbar -->
     <div class="read-toolbar">
       <div class="toolbar-left-group">
         <button id="mobileBackBtn" class="btn-back-prominent" type="button">
@@ -489,24 +493,46 @@ async function openThread(id, clickedEl){
       </div>
     </div>
 
-    <!-- Clean Unified Reading Canvas -->
+    <!-- Organized High-End Reading Canvas -->
     <div class="read-scroll">
-      <div class="thread-clean-header">
-        <h1 class="thread-main-subject">${esc(msg.subject || 'No Subject')}</h1>
-        <div class="thread-sender-bar">
-          <div class="sender-left-meta">
-            <div class="sender-avatar-clean">${esc(initial(msg.from))}</div>
-            <div class="sender-info">
-              <div class="sender-name-clean">${esc(msg.from.split('@')[0])}</div>
-              <div class="sender-address-clean">${esc(msg.from)} &bull; to ${esc(msg.to)}</div>
+      <div class="email-reading-card">
+        
+        <!-- 1. Subject Header & Category Pills -->
+        <div class="email-badge-row">
+          <span class="email-type-pill">${tagLabel}</span>
+          <span class="email-inbox-pill">Inbox</span>
+        </div>
+        <h1 class="email-title-text">${esc(msg.subject || 'No Subject')}</h1>
+
+        <!-- 2. Sender Meta Box -->
+        <div class="email-sender-card">
+          <div class="email-sender-avatar">${esc(initial(msg.from))}</div>
+          <div class="email-sender-details">
+            <div class="email-sender-topline">
+              <span class="email-sender-display-name">${esc(msg.from.split('@')[0])}</span>
+              <span class="email-date-stamp">${esc(fmtTime(msg.ts))}</span>
+            </div>
+            <div class="email-sender-subline">
+              <span>from <strong>${esc(msg.from)}</strong> &bull; to <strong>${esc(msg.to)}</strong></span>
             </div>
           </div>
-          <div class="thread-time-badge">${esc(fmtTime(msg.ts))}</div>
         </div>
-      </div>
 
-      <div class="thread-clean-body">
-        ${formatMessageBody(msg.body)}
+        <!-- 3. Formatted Email Body -->
+        <div class="email-body-content-wrap">
+          ${formatMessageBody(msg.body)}
+        </div>
+
+        <!-- 4. Clean Footer Branding -->
+        <div class="email-footer-branding">
+          <div class="footer-logo-row">
+            <span>📬 EDUCA MAIL</span>
+            <span>&bull;</span>
+            <span>Encrypted System</span>
+          </div>
+          <p>This message was sent securely to your EDUCA account.</p>
+        </div>
+
       </div>
     </div>
   `;

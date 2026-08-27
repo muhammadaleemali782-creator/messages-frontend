@@ -1506,3 +1506,234 @@ html, body {
   word-break: break-word;
   padding-top: 4px;
 }
+
+
+/* ================= ORGANIZED HIGH-END EMAIL THREAD VIEW ================= */
+.read-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+  background: #f8fafc;
+  display: flex;
+  justify-content: center;
+}
+
+.email-reading-card {
+  width: 100%;
+  max-width: 760px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 28px 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+}
+
+/* Badge Row */
+.email-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.email-type-pill {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.email-inbox-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* Title */
+.email-title-text {
+  font-size: 21px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+  letter-spacing: -0.3px;
+  margin-bottom: 20px;
+  word-break: break-word;
+}
+
+/* Sender Meta Box */
+.email-sender-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  margin-bottom: 22px;
+}
+
+.email-sender-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
+}
+
+.email-sender-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.email-sender-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.email-sender-display-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.email-date-stamp {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.email-sender-subline {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.email-sender-subline strong {
+  color: #334155;
+  font-weight: 600;
+}
+
+/* Email Body */
+.email-body-content-wrap {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #1e293b;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 4px 0;
+}
+
+/* Highlighted OTP Card */
+.otp-highlight-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 22px 0;
+  padding: 16px 22px;
+  background: #f0fdf4;
+  border: 1.5px solid #22c55e;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.12);
+}
+
+.otp-code {
+  font-size: 26px;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  letter-spacing: 5px;
+  color: #15803d;
+}
+
+.otp-copy-btn {
+  padding: 8px 16px;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+  transition: all 0.15s ease;
+}
+
+.otp-copy-btn:hover {
+  background: #15803d;
+}
+
+/* Footer Branding */
+.email-footer-branding {
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.footer-logo-row {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.email-footer-branding p {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+/* Mobile Adjustments for Reading Pane */
+@media (max-width: 768px) {
+  .read-scroll {
+    padding: 12px;
+    background: #ffffff;
+  }
+  .email-reading-card {
+    border: none;
+    border-radius: 0;
+    padding: 10px 4px 30px 4px;
+    box-shadow: none;
+  }
+  .email-title-text {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  .otp-highlight-card {
+    padding: 14px 16px;
+  }
+  .otp-code {
+    font-size: 22px;
+    letter-spacing: 4px;
+  }
+}
