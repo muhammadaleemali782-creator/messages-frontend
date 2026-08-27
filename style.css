@@ -1753,3 +1753,202 @@ html, body {
     letter-spacing: 4px;
   }
 }
+
+
+/* ================= NATIVE GMAIL COMPOSE SCREEN ================= */
+.compose-screen-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2500;
+  padding: 20px;
+}
+
+.compose-window {
+  background: #ffffff;
+  width: 100%;
+  max-width: 620px;
+  height: 82vh;
+  max-height: 640px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.compose-app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.compose-bar-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.compose-bar-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.compose-bar-title {
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #0f172a;
+  flex: 1;
+  margin-left: 12px;
+}
+
+.compose-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compose-bar-send-btn {
+  padding: 6px 14px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  transition: all 0.15s ease;
+}
+
+.compose-bar-send-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.compose-fields-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.compose-line-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.compose-line-field label {
+  width: 55px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.from-display {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.compose-line-field input {
+  flex: 1;
+  border: none;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  background: transparent;
+}
+
+.compose-line-field input::placeholder {
+  color: #94a3b8;
+}
+
+.compose-body-area {
+  flex: 1;
+  padding: 16px 18px;
+  display: flex;
+}
+
+.compose-body-area textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1e293b;
+  background: transparent;
+}
+
+.compose-body-area textarea::placeholder {
+  color: #94a3b8;
+}
+
+.compose-status-msg {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px 16px;
+}
+
+/* Full Screen Mobile View for Compose */
+@media (max-width: 768px) {
+  .compose-screen-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    margin: 0;
+    background: #ffffff;
+    z-index: 2500;
+  }
+
+  .compose-window {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  .compose-app-bar {
+    height: 54px;
+    padding: 0 12px;
+  }
+
+  .compose-line-field {
+    padding: 11px 14px;
+  }
+
+  .compose-body-area {
+    padding: 14px 14px 40px 14px;
+  }
+}

@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260827_v30">
+<link rel="stylesheet" href="style.css?v=20260827_v35">
 </head>
 <body>
 
@@ -297,15 +297,21 @@
   </div>
 </div>
 
-<!-- ================= COMPOSE EMAIL MODAL (Reference Image 3) ================= -->
+<!-- ================= COMPOSE EMAIL MODAL (Native Gmail UI) ================= -->
 <div class="compose-screen-overlay hidden" id="composeOverlay">
   <div class="compose-window">
     <div class="compose-app-bar">
-      <button id="composeCloseBtn" type="button" class="btn-icon-bar" aria-label="Back">←</button>
-      <h3 class="compose-bar-title">Compose</h3>
+      <button id="composeCloseBtn" type="button" class="compose-bar-btn" aria-label="Back">
+        <span style="font-size: 22px; line-height: 1;">←</span>
+      </button>
+      <div class="compose-bar-title">Compose</div>
       <div class="compose-bar-actions">
-        <button id="sendComposeBtn" type="button" class="btn-icon-bar send-icon-btn" title="Send email">➢</button>
-        <button id="composeDiscardBtn" type="button" class="btn-icon-bar" title="Discard">🗑️</button>
+        <button id="sendComposeBtn" type="button" class="compose-bar-send-btn" title="Send email">
+          <span style="font-size: 20px; line-height: 1;">➢</span>
+        </button>
+        <button id="composeDiscardBtn" type="button" class="compose-bar-btn" title="Discard">
+          <span style="font-size: 17px; line-height: 1;">🗑️</span>
+        </button>
       </div>
     </div>
 
@@ -332,8 +338,19 @@
     </div>
   </div>
 </div>
+      <div class="compose-line-field">
+        <label>Subject</label>
+        <input id="cSubject" placeholder="Subject" autocomplete="off">
+      </div>
+      <div class="compose-body-area">
+        <textarea id="cBody" placeholder="Compose email..."></textarea>
+      </div>
+      <div id="composeMsg" class="compose-status-msg"></div>
+    </div>
+  </div>
+</div>
 
-<script src="config.js?v=20260827_v30"></script>
-<script src="app.js?v=20260827_v30"></script>
+<script src="config.js?v=20260827_v35"></script>
+<script src="app.js?v=20260827_v35"></script>
 </body>
 </html>
