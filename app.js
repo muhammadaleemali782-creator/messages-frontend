@@ -412,7 +412,7 @@ function renderList(){
   });
 }
 
-/* ================= 5. OPEN THREAD WITH 2-STAGE TRASH ================= */
+/* ================= 5. OPEN THREAD (Clean Ultra-Professional UI) ================= */
 async function openThread(id, clickedEl){
   activeSelectedMessage = id;
   document.querySelectorAll('.email-row-item').forEach(el=>el.classList.remove('selected'));
@@ -442,52 +442,94 @@ async function openThread(id, clickedEl){
   const isTrashed = trashedIds.has(String(id));
 
   document.getElementById('readPane').innerHTML = `
+    <!-- Top Gmail-style Toolbar -->
     <div class="read-toolbar">
-      <button id="mobileBackBtn" class="toolbar-btn" type="button">← Back</button>
-      <button id="replyBtn" class="toolbar-btn" type="button">↩ Reply</button>
-      <button id="forwardBtn" class="toolbar-btn" type="button">↪ Forward</button>
-      <button id="starBtn" class="toolbar-btn ${isStarred ? 'active-star' : ''}" type="button">${isStarred ? '★ Starred' : '☆ Star'}</button>
-      <button id="archiveBtn" class="toolbar-btn" type="button">${isArchived ? '📥 Unarchive' : '📦 Archive'}</button>
-      ${isTrashed ? `
-        <button id="restoreBtn" class="toolbar-btn" type="button">↩ Restore to Inbox</button>
-        <button id="permDeleteBtn" class="toolbar-btn text-danger" type="button">🗑️ Delete Forever</button>
-      ` : `
-        <button id="trashBtn" class="toolbar-btn text-danger" type="button">🗑️ Move to Trash</button>
-      `}
-      <div class="spacer"></div>
-      <span class="thread-time">${esc(fmtTime(msg.ts))}</span>
-    </div>
-    <div class="read-scroll">
-      <div class="subject-banner">
-        <h2 class="subject-heading">${esc(msg.subject)}</h2>
+      <div class="toolbar-left-group">
+        <button id="mobileBackBtn" class="btn-back-prominent" type="button">
+          <span>←</span>
+          <span>Back</span>
+        </button>
       </div>
-      <div class="thread-card">
-        <div class="thread-sender-row">
-          <div class="sender-avatar">${esc(initial(msg.from))}</div>
-          <div class="sender-details">
-            <div class="sender-name">${esc(msg.from.split('@')[0])}</div>
-            <div class="sender-addr">${esc(msg.from)}</div>
-            <div class="sender-to">To: ${esc(msg.to)}</div>
-          </div>
+
+      <div class="toolbar-right-group">
+        <button id="quickStarBtn" class="btn-action-icon ${isStarred ? 'active-star' : ''}" type="button" title="${isStarred ? 'Unstar' : 'Star'}">
+          ${isStarred ? '★' : '☆'}
+        </button>
+
+        ${isTrashed ? `
+          <button id="quickRestoreBtn" class="btn-action-icon" type="button" title="Restore to Inbox">↩</button>
+          <button id="quickPermDeleteBtn" class="btn-action-icon text-danger" type="button" title="Delete Forever">🗑️</button>
+        ` : `
+          <button id="quickTrashBtn" class="btn-action-icon text-danger" type="button" title="Move to Trash">🗑️</button>
+        `}
+
+        <button id="threadMenuBtn" class="btn-action-icon" type="button" title="More options">⋮</button>
+
+        <!-- Dropdown Menu -->
+        <div id="threadMenuDropdown" class="thread-menu-dropdown hidden">
+          <button id="menuReplyBtn" class="thread-menu-item" type="button">
+            <span>↩</span>
+            <span>Reply</span>
+          </button>
+          <button id="menuForwardBtn" class="thread-menu-item" type="button">
+            <span>↪</span>
+            <span>Forward</span>
+          </button>
+          <button id="menuArchiveBtn" class="thread-menu-item" type="button">
+            <span>📦</span>
+            <span>${isArchived ? 'Unarchive' : 'Archive'}</span>
+          </button>
+          ${!isTrashed ? `
+            <button id="menuTrashBtn" class="thread-menu-item text-danger" type="button">
+              <span>🗑️</span>
+              <span>Move to Trash</span>
+            </button>
+          ` : ''}
         </div>
-        <div class="thread-body-content">${formatMessageBody(msg.body)}</div>
+      </div>
+    </div>
+
+    <!-- Clean Unified Reading Canvas -->
+    <div class="read-scroll">
+      <div class="thread-clean-header">
+        <h1 class="thread-main-subject">${esc(msg.subject || 'No Subject')}</h1>
+        <div class="thread-sender-bar">
+          <div class="sender-left-meta">
+            <div class="sender-avatar-clean">${esc(initial(msg.from))}</div>
+            <div class="sender-info">
+              <div class="sender-name-clean">${esc(msg.from.split('@')[0])}</div>
+              <div class="sender-address-clean">${esc(msg.from)} &bull; to ${esc(msg.to)}</div>
+            </div>
+          </div>
+          <div class="thread-time-badge">${esc(fmtTime(msg.ts))}</div>
+        </div>
+      </div>
+
+      <div class="thread-clean-body">
+        ${formatMessageBody(msg.body)}
       </div>
     </div>
   `;
 
+  // Back button
   document.getElementById('mobileBackBtn')?.addEventListener('click', () => {
     document.getElementById('readPane')?.classList.remove('mobile-active');
   });
 
-  document.getElementById('replyBtn')?.addEventListener('click', () => {
-    openCompose(msg.from, `Re: ${msg.subject}`, `\n\n--- Original Message from ${msg.from} ---\n${msg.body}`);
+  // 3-Dots Menu Toggle
+  const menuBtn = document.getElementById('threadMenuBtn');
+  const menuDropdown = document.getElementById('threadMenuDropdown');
+  menuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuDropdown?.classList.toggle('hidden');
   });
 
-  document.getElementById('forwardBtn')?.addEventListener('click', () => {
-    openCompose('', `Fwd: ${msg.subject}`, `\n\n--- Forwarded Message ---\nFrom: ${msg.from}\nDate: ${fmtTime(msg.ts)}\nSubject: ${msg.subject}\n\n${msg.body}`);
-  });
+  document.addEventListener('click', () => {
+    menuDropdown?.classList.add('hidden');
+  }, { once: true });
 
-  document.getElementById('starBtn')?.addEventListener('click', () => {
+  // Quick Star
+  document.getElementById('quickStarBtn')?.addEventListener('click', () => {
     if (starredIds.has(String(id))) starredIds.delete(String(id));
     else starredIds.add(String(id));
     localStorage.setItem('educa_starred_ids', JSON.stringify([...starredIds]));
@@ -495,7 +537,28 @@ async function openThread(id, clickedEl){
     openThread(id, clickedEl);
   });
 
-  document.getElementById('archiveBtn')?.addEventListener('click', () => {
+  // Reply
+  document.getElementById('menuReplyBtn')?.addEventListener('click', () => {
+    openCompose(msg.from, `Re: ${msg.subject}`, `
+
+--- Original Message from ${msg.from} ---
+${msg.body}`);
+  });
+
+  // Forward
+  document.getElementById('menuForwardBtn')?.addEventListener('click', () => {
+    openCompose('', `Fwd: ${msg.subject}`, `
+
+--- Forwarded Message ---
+From: ${msg.from}
+Date: ${fmtTime(msg.ts)}
+Subject: ${msg.subject}
+
+${msg.body}`);
+  });
+
+  // Archive
+  document.getElementById('menuArchiveBtn')?.addEventListener('click', () => {
     if (archivedIds.has(String(id))) archivedIds.delete(String(id));
     else archivedIds.add(String(id));
     localStorage.setItem('educa_archived_ids', JSON.stringify([...archivedIds]));
@@ -503,25 +566,27 @@ async function openThread(id, clickedEl){
     openThread(id, clickedEl);
   });
 
-  // Stage 1 Delete: Move to Trash
-  document.getElementById('trashBtn')?.addEventListener('click', () => {
+  // Quick Trash
+  const handleTrash = () => {
     trashedIds.add(String(id));
     localStorage.setItem('educa_trashed_ids', JSON.stringify([...trashedIds]));
     renderList();
     document.getElementById('readPane').innerHTML = `<div class="no-selection-state"><h3>Message moved to Trash 🗑️</h3></div>`;
     document.getElementById('readPane')?.classList.remove('mobile-active');
-  });
+  };
+  document.getElementById('quickTrashBtn')?.addEventListener('click', handleTrash);
+  document.getElementById('menuTrashBtn')?.addEventListener('click', handleTrash);
 
   // Restore from Trash
-  document.getElementById('restoreBtn')?.addEventListener('click', () => {
+  document.getElementById('quickRestoreBtn')?.addEventListener('click', () => {
     trashedIds.delete(String(id));
     localStorage.setItem('educa_trashed_ids', JSON.stringify([...trashedIds]));
     renderList();
     openThread(id, clickedEl);
   });
 
-  // Stage 2 Delete: Permanent Delete Forever
-  document.getElementById('permDeleteBtn')?.addEventListener('click', async () => {
+  // Permanent Delete
+  document.getElementById('quickPermDeleteBtn')?.addEventListener('click', async () => {
     if (confirm('Permanently delete this email? It cannot be recovered.')) {
       permanentlyDeletedIds.add(String(id));
       trashedIds.delete(String(id));
