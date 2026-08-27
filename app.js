@@ -1,38 +1,36 @@
-// EDUCA Mail Client Application Engine · Enterprise v2.0
+// EDUCA Mail · Google Gmail Engine Architecture v3.0
 const API_BASE = window.MAIL_SERVER_URL || 'https://messages-backend-e6pe.onrender.com';
 
 let ME = null;
 let currentFolder = 'inbox';
+let currentCategory = 'all';
 let currentLabel = null;
 let currentInbox = [];
 let searchQuery = '';
 let activeSelectedMessage = null;
 
-// Persistent User Folder Sets
+// Persistent User Sets
 const starredIds = new Set(JSON.parse(localStorage.getItem('educa_starred_ids') || '[]'));
 const deletedIds = new Set(JSON.parse(localStorage.getItem('educa_deleted_ids') || '[]'));
 const archivedIds = new Set(JSON.parse(localStorage.getItem('educa_archived_ids') || '[]'));
 const spamIds = new Set(JSON.parse(localStorage.getItem('educa_spam_ids') || '[]'));
 
-// Register Service Worker for Offline PWA
+// Register Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW notice:', err));
   });
 }
 
-// Online / Offline Detection
+// Online/Offline detection
 window.addEventListener('online', () => {
-  const b = document.getElementById('offlineBanner');
-  if (b) b.classList.add('hidden');
+  document.getElementById('offlineBanner')?.classList.add('hidden');
   loadInbox();
 });
 window.addEventListener('offline', () => {
-  const b = document.getElementById('offlineBanner');
-  if (b) b.classList.remove('hidden');
+  document.getElementById('offlineBanner')?.classList.remove('hidden');
 });
 
-// Helper: Escape HTML
 function esc(str){
   if (str === null || str === undefined) return '';
   return String(str).replace(/[&<>"']/g, s => ({
@@ -40,14 +38,12 @@ function esc(str){
   }[s]));
 }
 
-// Helper: Initial
 function initial(name){
-  if (!name) return 'U';
+  if (!name) return 'M';
   const clean = name.replace(/^[^a-zA-Z0-9]+/, '');
-  return (clean[0] || 'U').toUpperCase();
+  return (clean[0] || 'M').toUpperCase();
 }
 
-// Helper: Format Timestamp
 function fmtTime(ts){
   if (!ts) return '';
   const d = new Date(ts * 1000);
@@ -59,12 +55,11 @@ function fmtTime(ts){
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-// Helper: Format Message Body & Highlight OTP Codes
 function formatMessageBody(text) {
   if (!text) return '<span style="color:#94a3b8; font-style:italic;">(No message content)</span>';
   let escaped = esc(text);
 
-  // Detect 6-digit OTP code and render luxury copyable card
+  // Detect 6-digit OTP code and render modern Tech Emerald copyable card
   escaped = escaped.replace(/\b(\d{6})\b/g, (match) => {
     return `
       <div class="otp-highlight-card">
@@ -79,12 +74,11 @@ function formatMessageBody(text) {
   return escaped;
 }
 
-// Global OTP Copy Handler
 window.copyOtpCode = function(code, btn) {
   navigator.clipboard.writeText(code).then(() => {
     const originalText = btn.textContent;
     btn.textContent = '✓ Copied!';
-    btn.style.background = '#16a34a';
+    btn.style.background = '#15803d';
     setTimeout(() => {
       btn.textContent = originalText;
       btn.style.background = '#16a34a';
@@ -101,56 +95,69 @@ function getAuthHeaders(){
   return headers;
 }
 
-/* ================= BOOT & AUTH ================= */
+/* ================= 1. BOOT & AUTH LIFECYCLE ================= */
 async function enterApp(){
-  const bootEl = document.getElementById('appBootLoader');
   const authEl = document.getElementById('authScreen');
   const mainEl = document.getElementById('mainApp');
 
-  const cachedToken = localStorage.getItem('educa_mail_token');
-  const cachedId = localStorage.getItem('educa_cached_identifier');
+  const token = localStorage.getItem('educa_mail_token');
+  const cachedId = localStorage.getItem('educa_cached_identifier') || 'Admin';
 
-  if (cachedToken && cachedId) {
-    mainEl.classList.remove('hidden');
-    authEl.classList.add('hidden');
-    document.getElementById('acctSub').textContent = cachedId;
-    document.getElementById('acctAvatar').textContent = initial(cachedId);
-    document.getElementById('acctName').textContent = cachedId.split('@')[0].toUpperCase();
+  if (!token) {
+    authEl.classList.remove('hidden');
+    mainEl.classList.add('hidden');
+    return;
   }
+
+  // Pre-fill profile metadata immediately
+  authEl.classList.add('hidden');
+  mainEl.classList.remove('hidden');
+  updateProfileUI(cachedId);
 
   try {
     const meRes = await fetch(`${API_BASE}/auth/me`, { 
       headers: getAuthHeaders(),
-      credentials:'include' 
+      credentials: 'include' 
     });
 
     if (!meRes.ok) { 
       localStorage.removeItem('educa_mail_token');
-      localStorage.removeItem('educa_cached_identifier');
       authEl.classList.remove('hidden');
       mainEl.classList.add('hidden');
-      if (bootEl) bootEl.classList.add('hidden');
       return; 
     }
 
     ME = await meRes.json();
     localStorage.setItem('educa_cached_identifier', ME.identifier);
-    authEl.classList.add('hidden');
-    mainEl.classList.remove('hidden');
-    document.getElementById('acctSub').textContent = ME.identifier;
-    document.getElementById('acctAvatar').textContent = initial(ME.identifier);
-    document.getElementById('acctName').textContent = ME.identifier.split('@')[0].toUpperCase();
-    if (bootEl) bootEl.classList.add('hidden');
+    updateProfileUI(ME.identifier);
     await loadInbox();
   } catch(e) {
-    if (!cachedToken) {
-      authEl.classList.remove('hidden');
-      mainEl.classList.add('hidden');
-    }
-    if (bootEl) bootEl.classList.add('hidden');
+    // Network offline fallback
+    await loadInbox();
   }
 }
 
+function updateProfileUI(id) {
+  const name = (id.split('@')[0] || 'User').toUpperCase();
+  const initLetter = initial(name);
+
+  const acctAvatar = document.getElementById('acctAvatar');
+  if (acctAvatar) acctAvatar.textContent = initLetter;
+
+  const modalAvatar = document.getElementById('modalAcctAvatar');
+  if (modalAvatar) modalAvatar.textContent = initLetter;
+
+  const modalName = document.getElementById('modalAcctName');
+  if (modalName) modalName.textContent = name;
+
+  const modalEmail = document.getElementById('modalAcctEmail');
+  if (modalEmail) modalEmail.textContent = id.includes('@') ? id : `${id}@educaveda.com`;
+
+  const composeFrom = document.getElementById('composeFromEmail');
+  if (composeFrom) composeFrom.textContent = id.includes('@') ? id : `${id}@educaveda.com`;
+}
+
+/* ================= 2. LOAD INBOX ================= */
 async function loadInbox(){
   try{
     if (!navigator.onLine) throw new Error('Offline');
@@ -169,26 +176,25 @@ async function loadInbox(){
       try {
         currentInbox = JSON.parse(offlineData);
         renderList();
-        const b = document.getElementById('offlineBanner');
-        if (b) b.classList.remove('hidden');
+        document.getElementById('offlineBanner')?.classList.remove('hidden');
         return;
       } catch (err) {}
     }
-    document.getElementById('listScroll').innerHTML = `<div class="empty-state">Messages could not be loaded. ${navigator.onLine ? 'Please sign in again.' : 'Offline mode.'}</div>`;
+    document.getElementById('listScroll').innerHTML = `<div class="empty-state">No messages loaded. Click 🔄 to refresh.</div>`;
   }
 }
 
-/* ================= FILTERING & LIST RENDERING ================= */
+/* ================= 3. FILTERING & LIST RENDERING ================= */
 function getFilteredMessages(){
   const nowSec = Math.floor(Date.now() / 1000);
   const THREE_HOURS_SEC = 3 * 3600;
 
   return currentInbox.filter(m => {
-    // 3-hour TTL auto-expiration
+    // 3-hour auto-expire
     if (m.ts && (nowSec - m.ts > THREE_HOURS_SEC)) return false;
     const id = String(m.id);
 
-    // Folder routing
+    // Folder checks
     if (currentFolder === 'trash') return deletedIds.has(id);
     if (deletedIds.has(id)) return false;
 
@@ -207,8 +213,17 @@ function getFilteredMessages(){
 
     if (currentFolder === 'drafts') return false;
 
+    // Inbox
     if (currentFolder === 'inbox') {
-      return !deletedIds.has(id) && !archivedIds.has(id) && !spamIds.has(id);
+      if (deletedIds.has(id) || archivedIds.has(id) || spamIds.has(id)) return false;
+    }
+
+    // Category filter
+    if (currentCategory !== 'all') {
+      const text = `${m.subject || ''} ${m.body || ''}`.toLowerCase();
+      if (currentCategory === 'updates' && !text.includes('otp') && !text.includes('security') && !text.includes('update')) return false;
+      if (currentCategory === 'social' && !text.includes('social') && !text.includes('network') && !text.includes('team')) return false;
+      if (currentCategory === 'promotions' && !text.includes('promo') && !text.includes('order') && !text.includes('sale')) return false;
     }
 
     if (currentLabel) {
@@ -234,6 +249,16 @@ function renderList(){
   const inboxBadge = document.getElementById('inboxCount');
   if (inboxBadge) inboxBadge.textContent = unreadCount ? String(unreadCount) : '';
   
+  const bBadge = document.getElementById('bottomNavBadge');
+  if (bBadge) {
+    if (unreadCount) {
+      bBadge.textContent = unreadCount;
+      bBadge.classList.remove('hidden');
+    } else {
+      bBadge.classList.add('hidden');
+    }
+  }
+
   const starredBadge = document.getElementById('starredCount');
   if (starredBadge) starredBadge.textContent = starredIds.size ? String(starredIds.size) : '';
 
@@ -249,34 +274,36 @@ function renderList(){
     const isUnread = !m.read;
 
     return `
-    <div class="msg-item ${isSelected ? 'selected' : ''} ${isUnread ? 'unread' : ''}" data-id="${esc(m.id)}">
-      <div class="msg-avatar">${esc(initial(m.from))}</div>
-      <div class="msg-content">
-        <div class="msg-top-row">
-          <div class="msg-from">
-            <span>${esc(m.from)}</span>
-            ${isUnread ? '<span class="badge-new">NEW</span>' : ''}
-          </div>
-          <div class="msg-time">
-            ${isStarred ? '<span style="color:#2563eb;">★</span>' : ''}
-            <span>${esc(fmtTime(m.ts))}</span>
+    <div class="email-row-item ${isSelected ? 'selected' : ''} ${isUnread ? 'unread' : ''}" data-id="${esc(m.id)}">
+      <div class="email-avatar">${esc(initial(m.from))}</div>
+      <div class="email-main-body">
+        <div class="email-header-line">
+          <span class="email-sender">${esc(m.from.split('@')[0])}</span>
+          <div class="email-date-wrap">
+            ${isUnread ? '<span class="unread-dot"></span>' : ''}
+            <span class="email-date">${esc(fmtTime(m.ts))}</span>
           </div>
         </div>
-        <div class="msg-subject">${esc(m.subject || 'No Subject')}</div>
-        <div class="msg-preview">${esc(m.body ? m.body.slice(0, 70) + '...' : '')}</div>
+        <div class="email-subject">${esc(m.subject || 'No Subject')}</div>
+        <div class="email-snippet-row">
+          <span class="email-snippet">${esc(m.body ? m.body.slice(0, 65) + '...' : '')}</span>
+          <button type="button" class="star-btn ${isStarred ? 'starred' : ''}" data-star-id="${esc(m.id)}">
+            ${isStarred ? '★' : '☆'}
+          </button>
+        </div>
       </div>
     </div>
   `}).join('');
 }
 
-/* ================= OPEN THREAD ================= */
+/* ================= 4. OPEN THREAD ================= */
 async function openThread(id, clickedEl){
   activeSelectedMessage = id;
-  document.querySelectorAll('.msg-item').forEach(el=>el.classList.remove('selected'));
+  document.querySelectorAll('.email-row-item').forEach(el=>el.classList.remove('selected'));
   if (clickedEl) clickedEl.classList.add('selected');
   
-  // Mobile active reading view
-  document.querySelector('.read-pane')?.classList.add('mobile-active');
+  // Slide in reading pane on mobile
+  document.getElementById('readPane')?.classList.add('mobile-active');
 
   let msg = currentInbox.find(m => String(m.id) === String(id));
   try {
@@ -290,7 +317,7 @@ async function openThread(id, clickedEl){
   } catch(e){}
 
   if(!msg){ 
-    document.getElementById('readPane').innerHTML = `<div class="no-selection-state"><h3>Message could not be opened</h3></div>`; 
+    document.getElementById('readPane').innerHTML = `<div class="no-selection-state"><h3>Message could not be loaded</h3></div>`; 
     return; 
   }
 
@@ -300,7 +327,7 @@ async function openThread(id, clickedEl){
 
   document.getElementById('readPane').innerHTML = `
     <div class="read-toolbar">
-      <button id="mobileBackBtn" class="toolbar-btn mobile-back-btn hidden" type="button">← Back to Inbox</button>
+      <button id="mobileBackBtn" class="toolbar-btn" type="button">← Back</button>
       <button id="replyBtn" class="toolbar-btn" type="button">↩ Reply</button>
       <button id="forwardBtn" class="toolbar-btn" type="button">↪ Forward</button>
       <button id="starBtn" class="toolbar-btn ${isStarred ? 'active-star' : ''}" type="button">${isStarred ? '★ Starred' : '☆ Star'}</button>
@@ -311,7 +338,6 @@ async function openThread(id, clickedEl){
     </div>
     <div class="read-scroll">
       <div class="subject-banner">
-        <div class="subject-tag">Subject</div>
         <h2 class="subject-heading">${esc(msg.subject)}</h2>
       </div>
       <div class="thread-card">
@@ -328,9 +354,9 @@ async function openThread(id, clickedEl){
     </div>
   `;
 
-  // Mobile Back Button
+  // Back button on mobile
   document.getElementById('mobileBackBtn')?.addEventListener('click', () => {
-    document.querySelector('.read-pane')?.classList.remove('mobile-active');
+    document.getElementById('readPane')?.classList.remove('mobile-active');
   });
 
   // Reply
@@ -367,11 +393,11 @@ async function openThread(id, clickedEl){
     localStorage.setItem('educa_deleted_ids', JSON.stringify([...deletedIds]));
     renderList();
     document.getElementById('readPane').innerHTML = `<div class="no-selection-state"><h3>Message deleted</h3></div>`;
-    document.querySelector('.read-pane')?.classList.remove('mobile-active');
+    document.getElementById('readPane')?.classList.remove('mobile-active');
   });
 }
 
-/* ================= COMPOSE MODAL ================= */
+/* ================= 5. COMPOSE EMAIL ================= */
 function openCompose(to='', subj='', body=''){
   document.getElementById('cTo').value = to;
   document.getElementById('cSubject').value = subj;
@@ -392,13 +418,13 @@ async function sendCompose(){
 
   if(!to || !subject){
     msgEl.style.color = '#dc2626';
-    msgEl.textContent = 'Recipient and Subject are required.';
+    msgEl.textContent = 'Recipient and Subject required';
     return;
   }
 
   try {
-    msgEl.style.color = '#0284c7';
-    msgEl.textContent = 'Sending message...';
+    msgEl.style.color = '#2563eb';
+    msgEl.textContent = 'Sending email...';
     const res = await fetch(`${API_BASE}/mail/send`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -408,41 +434,39 @@ async function sendCompose(){
     const data = await res.json();
     if(!res.ok) throw new Error(data.error || 'Failed to send');
     msgEl.style.color = '#16a34a';
-    msgEl.textContent = 'Message sent successfully!';
+    msgEl.textContent = '✓ Message sent!';
     setTimeout(() => {
       closeCompose();
       loadInbox();
-    }, 1000);
+    }, 900);
   } catch(e) {
     msgEl.style.color = '#dc2626';
     msgEl.textContent = e.message;
   }
 }
 
-/* ================= LOGOUT ================= */
-async function logout(){
-  try {
-    await fetch(`${API_BASE}/auth/logout`, { method:'POST', headers: getAuthHeaders(), credentials:'include' });
-  } catch(e){}
+/* ================= 6. GUARANTEED 1-CLICK LOGOUT ================= */
+function logout(){
   localStorage.removeItem('educa_mail_token');
   localStorage.removeItem('educa_cached_identifier');
-  location.reload();
+  localStorage.removeItem('educa_offline_inbox');
+  try {
+    fetch(`${API_BASE}/auth/logout`, { method:'POST', credentials: 'include' });
+  } catch(e){}
+  window.location.reload();
 }
 
-/* ================= EVENT ATTACHMENTS ================= */
+/* ================= 7. EVENT ATTACHMENTS ================= */
 window.addEventListener('DOMContentLoaded', () => {
   enterApp();
 
   // Navigation Items
-  document.querySelectorAll('#sidebarNav .nav-item').forEach(btn => {
+  document.querySelectorAll('#sidebarNav .drawer-item').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#sidebarNav .nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#sidebarNav .drawer-item, #labelsNav .drawer-item').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentFolder = btn.dataset.folder;
       currentLabel = null;
-      document.getElementById('currentFolderTitle').textContent = btn.querySelector('.nav-label').textContent;
-      
-      // Close mobile sidebar
       document.getElementById('appSidebar')?.classList.remove('mobile-open');
       document.getElementById('sidebarBackdrop')?.classList.add('hidden');
       renderList();
@@ -450,15 +474,23 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Labels
-  document.querySelectorAll('#labelsNav .label-item').forEach(btn => {
+  document.querySelectorAll('#labelsNav .drawer-item').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('#sidebarNav .nav-item, #labelsNav .label-item').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#sidebarNav .drawer-item, #labelsNav .drawer-item').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentLabel = btn.dataset.label;
-      document.getElementById('currentFolderTitle').textContent = `Label: ${currentLabel}`;
-      
       document.getElementById('appSidebar')?.classList.remove('mobile-open');
       document.getElementById('sidebarBackdrop')?.classList.add('hidden');
+      renderList();
+    });
+  });
+
+  // Category Tabs
+  document.querySelectorAll('.category-tabs-row .cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.category-tabs-row .cat-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentCategory = tab.dataset.cat;
       renderList();
     });
   });
@@ -481,30 +513,39 @@ window.addEventListener('DOMContentLoaded', () => {
     renderList();
   });
 
-  // Message Click Delegation
+  // Star and Message Clicks
   document.getElementById('listScroll')?.addEventListener('click', (e) => {
-    const item = e.target.closest('.msg-item');
-    if (item && item.dataset.id) {
-      openThread(item.dataset.id, item);
+    const starBtn = e.target.closest('.star-btn');
+    if (starBtn && starBtn.dataset.starId) {
+      e.stopPropagation();
+      const sId = starBtn.dataset.starId;
+      if (starredIds.has(sId)) starredIds.delete(sId);
+      else starredIds.add(sId);
+      localStorage.setItem('educa_starred_ids', JSON.stringify([...starredIds]));
+      renderList();
+      return;
+    }
+
+    const row = e.target.closest('.email-row-item');
+    if (row && row.dataset.id) {
+      openThread(row.dataset.id, row);
     }
   });
 
-  // Compose
-  document.getElementById('composeBtn')?.addEventListener('click', () => openCompose());
-  document.getElementById('mobileFabCompose')?.addEventListener('click', () => openCompose());
-  document.getElementById('composeCloseBtn')?.addEventListener('click', closeCompose);
-  document.getElementById('composeDiscardBtn')?.addEventListener('click', closeCompose);
-  document.getElementById('sendComposeBtn')?.addEventListener('click', sendCompose);
+  // Account Switcher Dialog (Image 1)
+  document.getElementById('profileAvatarBtn')?.addEventListener('click', () => {
+    document.getElementById('accountModalOverlay')?.classList.remove('hidden');
+  });
+  document.getElementById('closeAccountModalBtn')?.addEventListener('click', () => {
+    document.getElementById('accountModalOverlay')?.classList.add('hidden');
+  });
+  document.getElementById('accountModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'accountModalOverlay') {
+      document.getElementById('accountModalOverlay')?.classList.add('hidden');
+    }
+  });
 
-  // Refresh
-  document.getElementById('refreshBtn')?.addEventListener('click', loadInbox);
-
-  // Logout Buttons
-  document.getElementById('logoutBtn')?.addEventListener('click', logout);
-  document.getElementById('quickLogoutBtn')?.addEventListener('click', logout);
-  document.getElementById('mobileQuickLogoutBtn')?.addEventListener('click', logout);
-
-  // Mobile Menu Drawer
+  // Mobile Menu Drawer Toggle (Image 5)
   document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
     document.getElementById('appSidebar')?.classList.toggle('mobile-open');
     document.getElementById('sidebarBackdrop')?.classList.toggle('hidden');
@@ -514,23 +555,33 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sidebarBackdrop')?.classList.add('hidden');
   });
 
+  // Compose Buttons
+  document.getElementById('composeBtn')?.addEventListener('click', () => openCompose());
+  document.getElementById('mobileFabCompose')?.addEventListener('click', () => openCompose());
+  document.getElementById('composeCloseBtn')?.addEventListener('click', closeCompose);
+  document.getElementById('composeDiscardBtn')?.addEventListener('click', closeCompose);
+  document.getElementById('sendComposeBtn')?.addEventListener('click', sendCompose);
+
+  // Logout Buttons (Instant Guarantee)
+  document.getElementById('dialogLogoutBtn')?.addEventListener('click', logout);
+  document.getElementById('sidebarLogoutBtn')?.addEventListener('click', logout);
+  document.getElementById('bNavLogout')?.addEventListener('click', logout);
+
   // Auth Tabs
   document.getElementById('tabLogin')?.addEventListener('click', () => {
     document.getElementById('tabLogin').classList.add('active');
     document.getElementById('tabSignup').classList.remove('active');
     document.getElementById('loginFields').classList.remove('hidden');
     document.getElementById('signupFields').classList.add('hidden');
-    document.getElementById('authSubmitBtn').querySelector('span').textContent = 'Continue to Mailbox';
   });
   document.getElementById('tabSignup')?.addEventListener('click', () => {
     document.getElementById('tabSignup').classList.add('active');
     document.getElementById('tabLogin').classList.remove('active');
     document.getElementById('signupFields').classList.remove('hidden');
     document.getElementById('loginFields').classList.add('hidden');
-    document.getElementById('authSubmitBtn').querySelector('span').textContent = 'Create Corporate Account';
   });
 
-  // Forgot Password Toggle
+  // Forgot password
   document.getElementById('forgotLink')?.addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('forgotBox')?.classList.toggle('show');
@@ -546,7 +597,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const identifier = document.getElementById('authIdentifier').value.trim();
       const password = document.getElementById('authPassword').value;
       if (!identifier || !password) {
-        msgEl.textContent = 'Please enter both identifier and password.';
+        msgEl.textContent = 'Please enter identifier and password';
         return;
       }
       try {
@@ -557,10 +608,10 @@ window.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ identifier, password })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Authentication failed');
+        if (!res.ok) throw new Error(data.error || 'Login failed');
         if (data.token) localStorage.setItem('educa_mail_token', data.token);
         if (data.identifier) localStorage.setItem('educa_cached_identifier', data.identifier);
-        await enterApp();
+        enterApp();
       } catch (err) {
         msgEl.textContent = err.message;
       }
@@ -569,7 +620,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const phone = document.getElementById('signupPhone').value.trim();
       const password = document.getElementById('signupPassword').value;
       if (!name || !password) {
-        msgEl.textContent = 'Name and Password (min 8 chars) are required.';
+        msgEl.textContent = 'Name and Password (min 8 chars) required';
         return;
       }
       try {
@@ -580,40 +631,30 @@ window.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ name, phone, password })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Account creation failed');
+        if (!res.ok) throw new Error(data.error || 'Signup failed');
         if (data.token) localStorage.setItem('educa_mail_token', data.token);
         if (data.identifier) localStorage.setItem('educa_cached_identifier', data.identifier);
-        const genMsg = document.getElementById('generatedEmailMsg');
-        if (genMsg) {
-          genMsg.textContent = `Account created: ${data.identifier}`;
-        }
-        await enterApp();
+        enterApp();
       } catch (err) {
         msgEl.textContent = err.message;
       }
     }
   });
 
-  // Forgot Password Request
+  // Forgot password request
   document.getElementById('requestResetBtn')?.addEventListener('click', async () => {
     const identifier = document.getElementById('forgotIdentifier').value.trim();
     const phone = document.getElementById('forgotPhone').value.trim();
     const fMsg = document.getElementById('forgotMsg');
-    if (!identifier) {
-      fMsg.style.color = '#dc2626';
-      fMsg.textContent = 'Please enter identifier';
-      return;
-    }
+    if (!identifier) return;
     try {
       await fetch(`${API_BASE}/reset-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, phone })
       });
-      fMsg.style.color = '#16a34a';
-      fMsg.textContent = 'Recovery request submitted to administrator.';
+      fMsg.textContent = 'Recovery request submitted.';
     } catch (e) {
-      fMsg.style.color = '#dc2626';
       fMsg.textContent = 'Request failed.';
     }
   });
