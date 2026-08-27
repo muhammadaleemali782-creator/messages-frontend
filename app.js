@@ -150,7 +150,12 @@ async function logout(){
 }
 
 function getFilteredMessages(){
+  const nowSec = Math.floor(Date.now() / 1000);
+  const THREE_HOURS_SEC = 3 * 3600;
+
   return currentInbox.filter(m => {
+    // 3-hour expiry check
+    if (m.ts && (nowSec - m.ts > THREE_HOURS_SEC)) return false;
     const id = String(m.id);
     if (deletedIds.has(id) && currentFolder !== 'trash') return false;
     if (currentFolder === 'trash') return deletedIds.has(id);
@@ -334,6 +339,8 @@ document.getElementById('composeBtn').addEventListener('click', () => openCompos
 document.getElementById('composeCloseBtn').addEventListener('click', closeCompose);
 document.getElementById('sendComposeBtn').addEventListener('click', sendCompose);
 document.getElementById('logoutBtn').addEventListener('click', logout);
+const qlBtn = document.getElementById('quickLogoutBtn');
+if (qlBtn) qlBtn.addEventListener('click', logout);
 
 // Sidebar Folder Navigation
 document.getElementById('sidebarNav').addEventListener('click', (e) => {

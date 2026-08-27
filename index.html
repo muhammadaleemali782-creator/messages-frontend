@@ -60,10 +60,13 @@
   <div class="sidebar">
     <div class="acct">
       <div class="avatar" id="acctAvatar">U</div>
-      <div>
+      <div class="acct-text">
         <div class="acct-name" id="acctName">Aap</div>
         <div class="acct-sub" id="acctSub">-</div>
       </div>
+      <button id="quickLogoutBtn" type="button" class="quick-logout-btn" title="Logout Account">
+        🚪
+      </button>
     </div>
     <button id="composeBtn" type="button" class="compose-btn">✏️ Compose</button>
     <ul class="nav" id="sidebarNav">
@@ -86,13 +89,18 @@
       <a href="https://educa-store.vercel.app" target="_blank" rel="noopener noreferrer" class="store-link">
         🌐 Visit Store Website ↗
       </a>
-      <div id="logoutBtn" class="logout-link">🚪 Logout</div>
+      <button id="logoutBtn" type="button" class="full-logout-btn">
+        <span>🚪 LOGOUT ACCOUNT</span>
+      </button>
     </div>
   </div>
 
   <div class="list-pane">
     <div class="list-head">
-      <h1 id="currentFolderTitle">Inbox</h1>
+      <div class="list-head-top">
+        <h1 id="currentFolderTitle">Inbox</h1>
+        <span class="ttl-badge" title="Messages are automatically deleted after 3 hours">⏳ 3h Auto-Expire</span>
+      </div>
       <div class="search-box">
         <input id="searchInput" type="text" placeholder="🔍 Search messages..." class="search-input" />
       </div>
