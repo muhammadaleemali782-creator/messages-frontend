@@ -1277,3 +1277,40 @@ button, input, textarea {
   background: #f1f5f9;
   color: #475569;
 }
+
+
+/* ================= 60FPS / 120FPS HARDWARE ACCELERATION & FLUID TOUCH ================= */
+html, body {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  touch-action: manipulation;
+}
+
+.list-scroll, .read-scroll, .sidebar-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+.email-row-item, .cat-tab, .drawer-item, .toolbar-btn, .gmail-fab-compose {
+  transition: transform 0.1s cubic-bezier(0.16, 1, 0.3, 1), background 0.12s ease;
+}
+
+.email-row-item:active {
+  transform: scale(0.995);
+  background: #f1f5f9;
+}
+
+.cat-tab:active {
+  transform: scale(0.96);
+}
+
+.drawer-item:active {
+  transform: scale(0.98);
+}
+
+.gmail-fab-compose:active {
+  transform: scale(0.94);
+}

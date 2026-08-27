@@ -318,6 +318,42 @@ function renderList(){
     }
   }
 
+  
+  // Dynamic Category Unread Badges (Only show if new mails exist)
+  const updatesUnread = currentInbox.filter(m => !m.read && !trashedIds.has(String(m.id)) && `${m.subject || ''} ${m.body || ''}`.toLowerCase().match(/(otp|security|update)/)).length;
+  const socialUnread = currentInbox.filter(m => !m.read && !trashedIds.has(String(m.id)) && `${m.subject || ''} ${m.body || ''}`.toLowerCase().match(/(social|network|team)/)).length;
+  const promoUnread = currentInbox.filter(m => !m.read && !trashedIds.has(String(m.id)) && `${m.subject || ''} ${m.body || ''}`.toLowerCase().match(/(promo|order|sale)/)).length;
+
+  const uBadge = document.getElementById('updatesBadge');
+  if (uBadge) {
+    if (updatesUnread > 0) {
+      uBadge.textContent = `${updatesUnread} new`;
+      uBadge.classList.remove('hidden');
+    } else {
+      uBadge.classList.add('hidden');
+    }
+  }
+
+  const sBadge = document.getElementById('socialBadge');
+  if (sBadge) {
+    if (socialUnread > 0) {
+      sBadge.textContent = `${socialUnread} new`;
+      sBadge.classList.remove('hidden');
+    } else {
+      sBadge.classList.add('hidden');
+    }
+  }
+
+  const pBadge = document.getElementById('promotionsBadge');
+  if (pBadge) {
+    if (promoUnread > 0) {
+      pBadge.textContent = `${promoUnread} new`;
+      pBadge.classList.remove('hidden');
+    } else {
+      pBadge.classList.add('hidden');
+    }
+  }
+
   const starredBadge = document.getElementById('starredCount');
   if (starredBadge) starredBadge.textContent = starredIds.size ? String(starredIds.size) : '';
 
