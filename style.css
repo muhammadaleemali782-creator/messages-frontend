@@ -159,3 +159,68 @@ body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidde
 @keyframes bootSpin {
   to { transform: rotate(360deg); }
 }
+
+/* ── 2GB RAM Mobile Optimization & Offline PWA Styles ── */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f59e0b;
+  color: #000;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  padding: 6px 12px;
+  z-index: 10000;
+  letter-spacing: 0.5px;
+}
+
+.mobile-only-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 190px;
+    overflow-y: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .list-pane {
+    width: 100%;
+    flex: 1;
+  }
+  .read-pane {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: #090d0b;
+  }
+  .read-pane.mobile-active {
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-only-btn {
+    display: inline-flex;
+    background: rgba(251,191,36,0.15);
+    color: #fbbf24;
+    border-color: rgba(251,191,36,0.3);
+    font-weight: 800;
+  }
+}
+
+/* Hardware-accelerated smooth scrolling */
+.list-scroll, .read-scroll {
+  -webkit-overflow-scrolling: touch;
+  will-change: transform;
+}

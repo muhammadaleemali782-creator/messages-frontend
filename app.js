@@ -1,4 +1,22 @@
 
+// Register Service Worker for Offline PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW reg error:', err));
+  });
+}
+
+// Online / Offline Listeners
+window.addEventListener('online', () => {
+  const b = document.getElementById('offlineBanner');
+  if (b) b.classList.add('hidden');
+  if (typeof loadInbox === 'function') loadInbox();
+});
+window.addEventListener('offline', () => {
+  const b = document.getElementById('offlineBanner');
+  if (b) b.classList.remove('hidden');
+});
+
 function formatMessageBody(text) {
   if (!text) return '<span style="color:#94a3b8; font-style:italic;">(Empty message body)</span>';
   let escaped = esc(text);
@@ -157,6 +175,7 @@ async function enterApp(){
 
 async function loadInbox(){
   try{
+    if (!navigator.onLine) throw new Error('Offline');
     const res = await fetch(`${API_BASE}/messages`, { 
       headers: getAuthHeaders(),
       credentials:'include' 
@@ -164,9 +183,22 @@ async function loadInbox(){
     if(!res.ok) throw new Error('session expired');
     const data = await res.json();
     currentInbox = Array.isArray(data) ? data : [];
+    // Cache for offline viewing
+    localStorage.setItem('educa_offline_inbox', JSON.stringify(currentInbox));
     renderList();
   }catch(e){
-    document.getElementById('listScroll').innerHTML = `<div class="empty">Messages load nahi ho sake. Dobara login karein.</div>`;
+    // Offline / Network error fallback
+    const offlineData = localStorage.getItem('educa_offline_inbox');
+    if (offlineData) {
+      try {
+        currentInbox = JSON.parse(offlineData);
+        renderList();
+        const b = document.getElementById('offlineBanner');
+        if (b) b.classList.remove('hidden');
+        return;
+      } catch (err) {}
+    }
+    document.getElementById('listScroll').innerHTML = `<div class="empty">Messages load nahi ho sake. ${navigator.onLine ? 'Dobara login karein.' : 'Internet disconnected.'}</div>`;
   }
 }
 
@@ -183,14 +215,44 @@ function getFilteredMessages(){
   const THREE_HOURS_SEC = 3 * 3600;
 
   return currentInbox.filter(m => {
-    // 3-hour expiry check
+    // 3-hour auto-expire
     if (m.ts && (nowSec - m.ts > THREE_HOURS_SEC)) return false;
     const id = String(m.id);
-    if (deletedIds.has(id) && currentFolder !== 'trash') return false;
-    if (currentFolder === 'trash') return deletedIds.has(id);
-    if (currentFolder === 'starred') return starredIds.has(id);
-    if (currentFolder === 'sent') return (m.from || '').toLowerCase().includes((ME?.identifier || '').toLowerCase());
-    
+
+    // Folder-specific strict routing
+    if (currentFolder === 'trash') {
+      return deletedIds.has(id);
+    }
+    if (deletedIds.has(id)) return false; // Deleted messages only belong in trash
+
+    if (currentFolder === 'spam') {
+      return spamIds.has(id);
+    }
+    if (spamIds.has(id)) return false; // Spam messages only belong in spam folder
+
+    if (currentFolder === 'archive') {
+      return archivedIds.has(id);
+    }
+    if (archivedIds.has(id)) return false; // Archived messages only belong in archive folder
+
+    if (currentFolder === 'starred') {
+      return starredIds.has(id);
+    }
+
+    if (currentFolder === 'sent') {
+      const myId = (ME?.identifier || localStorage.getItem('educa_cached_identifier') || '').toLowerCase();
+      return (m.from || '').toLowerCase().includes(myId.split('@')[0]);
+    }
+
+    if (currentFolder === 'drafts') {
+      return false;
+    }
+
+    // Inbox: only non-deleted, non-archived, non-spam
+    if (currentFolder === 'inbox') {
+      return !deletedIds.has(id) && !archivedIds.has(id) && !spamIds.has(id);
+    }
+
     if (currentLabel) {
       const text = `${m.subject || ''} ${m.body || ''}`.toLowerCase();
       if (!text.includes(currentLabel.toLowerCase())) return false;
@@ -243,14 +305,17 @@ async function openThread(id, clickedEl){
   document.querySelectorAll('.msg-item').forEach(el=>el.classList.remove('selected'));
   if (clickedEl) clickedEl.classList.add('selected');
   
+  // Mobile responsive view: toggle reading pane into view
+  document.querySelector('.read-pane')?.classList.add('mobile-active');
+
   let msg = currentInbox.find(m => String(m.id) === String(id));
   try {
-    const res = await fetch(`${API_BASE}/message/${encodeURIComponent(id)}`, { 
-      headers: getAuthHeaders(),
-      credentials:'include' 
-    });
-    if (res.ok) {
-      msg = await res.json();
+    if (navigator.onLine) {
+      const res = await fetch(`${API_BASE}/message/${encodeURIComponent(id)}`, { 
+        headers: getAuthHeaders(),
+        credentials:'include' 
+      });
+      if (res.ok) msg = await res.json();
     }
   } catch(e){}
 
@@ -261,12 +326,15 @@ async function openThread(id, clickedEl){
 
   msg.read = true;
   const isStarred = starredIds.has(String(id));
+  const isArchived = archivedIds.has(String(id));
 
   document.getElementById('readPane').innerHTML = `
     <div class="read-toolbar">
+      <button id="mobileBackBtn" class="toolbar-btn mobile-only-btn" type="button">← Back</button>
       <button id="replyBtn" class="toolbar-btn" type="button">↩ Reply</button>
       <button id="forwardBtn" class="toolbar-btn" type="button">↪ Forward</button>
       <button id="starBtn" class="toolbar-btn ${isStarred ? 'active-star' : ''}" type="button">${isStarred ? '★ Starred' : '☆ Star'}</button>
+      <button id="archiveBtn" class="toolbar-btn" type="button">${isArchived ? '📥 Unarchive' : '📦 Archive'}</button>
       <button id="deleteBtn" class="toolbar-btn text-danger" type="button">🗑️ Delete</button>
       <div class="spacer"></div>
       <span class="thread-time">${esc(fmtTime(msg.ts))}</span>
@@ -287,34 +355,56 @@ async function openThread(id, clickedEl){
     </div>
   `;
 
-  // Bind thread action buttons
-  document.getElementById('replyBtn').addEventListener('click', () => {
-    openCompose(msg.from, `Re: ${msg.subject}`, `\n\n--- Original Message from ${msg.from} ---\n${msg.body}`);
+  // Back button on mobile
+  document.getElementById('mobileBackBtn')?.addEventListener('click', () => {
+    document.querySelector('.read-pane')?.classList.remove('mobile-active');
   });
 
-  document.getElementById('forwardBtn').addEventListener('click', () => {
-    openCompose('', `Fwd: ${msg.subject}`, `\n\n---------- Forwarded message ----------\nFrom: ${msg.from}\nDate: ${fmtTime(msg.ts)}\nSubject: ${msg.subject}\nTo: ${msg.to}\n\n${msg.body}`);
+  // Reply
+  document.getElementById('replyBtn')?.addEventListener('click', () => {
+    openCompose(msg.from, `Re: ${msg.subject}`, `
+
+--- Original Message from ${msg.from} ---
+${msg.body}`);
   });
 
-  document.getElementById('starBtn').addEventListener('click', () => {
-    const sId = String(id);
-    if (starredIds.has(sId)) {
-      starredIds.delete(sId);
-    } else {
-      starredIds.add(sId);
-    }
-    localStorage.setItem('educa_starred_msg_ids', JSON.stringify(Array.from(starredIds)));
+  // Forward
+  document.getElementById('forwardBtn')?.addEventListener('click', () => {
+    openCompose('', `Fwd: ${msg.subject}`, `
+
+--- Forwarded Message ---
+From: ${msg.from}
+Date: ${fmtTime(msg.ts)}
+Subject: ${msg.subject}
+
+${msg.body}`);
+  });
+
+  // Star / Unstar
+  document.getElementById('starBtn')?.addEventListener('click', () => {
+    if (starredIds.has(String(id))) starredIds.delete(String(id));
+    else starredIds.add(String(id));
+    localStorage.setItem('educa_starred_ids', JSON.stringify([...starredIds]));
+    renderList();
     openThread(id, clickedEl);
-    renderList();
   });
 
-  document.getElementById('deleteBtn').addEventListener('click', () => {
-    const dId = String(id);
-    deletedIds.add(dId);
-    localStorage.setItem('educa_deleted_msg_ids', JSON.stringify(Array.from(deletedIds)));
-    document.getElementById('readPane').innerHTML = `<div class="no-selection">Message deleted 🗑️</div>`;
-    activeSelectedMessage = null;
+  // Archive / Unarchive
+  document.getElementById('archiveBtn')?.addEventListener('click', () => {
+    if (archivedIds.has(String(id))) archivedIds.delete(String(id));
+    else archivedIds.add(String(id));
+    localStorage.setItem('educa_archived_ids', JSON.stringify([...archivedIds]));
     renderList();
+    openThread(id, clickedEl);
+  });
+
+  // Delete
+  document.getElementById('deleteBtn')?.addEventListener('click', () => {
+    deletedIds.add(String(id));
+    localStorage.setItem('educa_deleted_ids', JSON.stringify([...deletedIds]));
+    renderList();
+    document.getElementById('readPane').innerHTML = `<div class="no-selection">Message delete kar diya gaya.</div>`;
+    document.querySelector('.read-pane')?.classList.remove('mobile-active');
   });
 }
 

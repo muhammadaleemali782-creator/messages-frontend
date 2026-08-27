@@ -1,0 +1,17 @@
+{
+  "name": "EDUCA Mail · Secure Messaging",
+  "short_name": "EducaMail",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d0b",
+  "theme_color": "#fbbf24",
+  "description": "Ultra-lightweight secure enterprise webmail by EDUCA VEDA",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📧</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
