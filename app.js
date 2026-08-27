@@ -87,7 +87,7 @@ window.copyOtpCode = function(code, btn) {
     btn.style.background = '#16a34a';
     setTimeout(() => {
       btn.textContent = originalText;
-      btn.style.background = '#f59e0b';
+      btn.style.background = '#16a34a';
     }, 1800);
   }).catch(() => {
     alert('OTP Code: ' + code);
@@ -258,7 +258,7 @@ function renderList(){
             ${isUnread ? '<span class="badge-new">NEW</span>' : ''}
           </div>
           <div class="msg-time">
-            ${isStarred ? '<span style="color:#d97706;">★</span>' : ''}
+            ${isStarred ? '<span style="color:#2563eb;">★</span>' : ''}
             <span>${esc(fmtTime(m.ts))}</span>
           </div>
         </div>

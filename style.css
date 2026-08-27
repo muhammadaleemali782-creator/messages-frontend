@@ -25,9 +25,9 @@
   --primary: #0284c7;
   --primary-hover: #0369a1;
   --primary-light: #e0f2fe;
-  --accent-gold: #d97706;
-  --accent-gold-light: #fef3c7;
-  --accent-gold-border: #f59e0b;
+  --accent-primary: #2563eb;
+  --accent-primary-light: #eff6ff;
+  --accent-primary-border: #bfdbfe;
 
   --danger: #dc2626;
   --danger-light: #fee2e2;
@@ -704,9 +704,9 @@ button, input, textarea {
   font-size: 10px;
   font-weight: 700;
   font-family: var(--font-mono);
-  background: var(--accent-gold-light);
-  border: 1px solid var(--accent-gold-border);
-  color: var(--accent-gold);
+  background: var(--accent-primary-light);
+  border: 1px solid var(--accent-primary-border);
+  color: var(--accent-primary);
   padding: 3px 8px;
   border-radius: 999px;
 }
@@ -947,9 +947,9 @@ button, input, textarea {
 }
 
 .toolbar-btn.active-star {
-  background: var(--accent-gold-light);
-  border-color: var(--accent-gold-border);
-  color: var(--accent-gold);
+  background: var(--accent-primary-light);
+  border-color: var(--accent-primary-border);
+  color: var(--accent-primary);
 }
 
 .toolbar-btn.text-danger {
@@ -1066,17 +1066,17 @@ button, input, textarea {
   word-break: break-word;
 }
 
-/* ⭐ Highlighted OTP Badge with 1-Click Copy */
+/* ⭐ Highlighted OTP Badge with 1-Click Copy (Sleek Tech Emerald & Indigo) */
 .otp-highlight-card {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   margin: 14px 0;
   padding: 12px 20px;
-  background: #fef3c7;
-  border: 2px solid #f59e0b;
+  background: #f0fdf4;
+  border: 1.5px solid #22c55e;
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
 }
 
 .otp-code {
@@ -1084,23 +1084,23 @@ button, input, textarea {
   font-weight: 900;
   font-family: var(--font-mono);
   letter-spacing: 4px;
-  color: #b45309;
+  color: #15803d;
 }
 
 .otp-copy-btn {
-  padding: 6px 12px;
-  background: #f59e0b;
+  padding: 7px 14px;
+  background: #16a34a;
   color: #fff;
   border: none;
   border-radius: var(--radius-md);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .otp-copy-btn:hover {
-  background: #d97706;
+  background: #15803d;
 }
 
 /* ================= COMPOSE MODAL ================= */
