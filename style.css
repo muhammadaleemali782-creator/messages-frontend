@@ -123,3 +123,39 @@ body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidde
 .list-head-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .list-head-top h1 { margin-bottom: 0; }
 .ttl-badge { font-size: 9.5px; font-weight: 800; font-family: monospace; color: #fbbf24; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.3); padding: 3px 8px; border-radius: 20px; letter-spacing: 0.5px; }
+
+/* Seamless Boot Screen */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  background: #090d0b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  gap: 12px;
+}
+.boot-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid rgba(251,191,36,0.15);
+  border-top-color: #fbbf24;
+  border-radius: 50%;
+  animation: bootSpin 0.7s linear infinite;
+}
+.boot-title {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #fbbf24;
+  margin-top: 4px;
+}
+.boot-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  font-family: monospace;
+}
+@keyframes bootSpin {
+  to { transform: rotate(360deg); }
+}

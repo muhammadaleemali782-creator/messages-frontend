@@ -65,6 +65,7 @@ async function submitAuth(){
       const data = await res.json();
       if(!res.ok) throw new Error(data.error || 'Login failed');
       if (data.token) localStorage.setItem('educa_mail_token', data.token);
+      if (data.identifier) localStorage.setItem('educa_cached_identifier', data.identifier);
       await enterApp();
     }catch(e){ msgEl.textContent = e.message; }
   } else {
@@ -79,6 +80,7 @@ async function submitAuth(){
       const data = await res.json();
       if(!res.ok) throw new Error(data.error || 'Signup failed');
       if (data.token) localStorage.setItem('educa_mail_token', data.token);
+      if (data.identifier) localStorage.setItem('educa_cached_identifier', data.identifier);
       genEl.style.color = '#10b981';
       genEl.textContent = `Aapka account ban gaya: ${data.identifier}`;
       await enterApp();
@@ -103,26 +105,53 @@ async function requestReset(){
 }
 
 async function enterApp(){
+  const bootEl = document.getElementById('appBootLoader');
+  const authEl = document.getElementById('authScreen');
+  const mainEl = document.getElementById('mainApp');
+
+  const cachedToken = localStorage.getItem('educa_mail_token');
+  const cachedId = localStorage.getItem('educa_cached_identifier');
+
+  // If cached session exists, pre-fill UI immediately for zero-lag instant display
+  if (cachedToken && cachedId) {
+    mainEl.classList.remove('hidden');
+    authEl.classList.add('hidden');
+    document.getElementById('acctSub').textContent = cachedId;
+    document.getElementById('acctAvatar').textContent = initial(cachedId);
+    document.getElementById('acctName').textContent = cachedId.split('@')[0].toUpperCase();
+  }
+
   try {
     const meRes = await fetch(`${API_BASE}/auth/me`, { 
       headers: getAuthHeaders(),
       credentials:'include' 
     });
-    if(!meRes.ok){ 
-      document.getElementById('authScreen').classList.remove('hidden');
-      document.getElementById('mainApp').classList.add('hidden');
+
+    if (!meRes.ok) { 
+      // Invalid session: show login screen cleanly
+      localStorage.removeItem('educa_mail_token');
+      localStorage.removeItem('educa_cached_identifier');
+      authEl.classList.remove('hidden');
+      mainEl.classList.add('hidden');
+      if (bootEl) bootEl.classList.add('hidden');
       return; 
     }
+
     ME = await meRes.json();
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
+    localStorage.setItem('educa_cached_identifier', ME.identifier);
+    authEl.classList.add('hidden');
+    mainEl.classList.remove('hidden');
     document.getElementById('acctSub').textContent = `${ME.identifier}`;
     document.getElementById('acctAvatar').textContent = initial(ME.identifier);
     document.getElementById('acctName').textContent = ME.identifier.split('@')[0].toUpperCase();
+    if (bootEl) bootEl.classList.add('hidden');
     await loadInbox();
   } catch(e) {
-    document.getElementById('authScreen').classList.remove('hidden');
-    document.getElementById('mainApp').classList.add('hidden');
+    if (!cachedToken) {
+      authEl.classList.remove('hidden');
+      mainEl.classList.add('hidden');
+    }
+    if (bootEl) bootEl.classList.add('hidden');
   }
 }
 

@@ -8,7 +8,14 @@
 </head>
 <body>
 
-<div id="authScreen" class="auth-screen">
+<!-- Seamless Boot Loader (Prevents Login Screen Flash) -->
+<div id="appBootLoader" class="boot-screen">
+  <div class="boot-spinner"></div>
+  <div class="boot-title">EDUCA MAIL</div>
+  <div class="boot-subtitle">Securing workspace session...</div>
+</div>
+
+<div id="authScreen" class="auth-screen hidden">
   <div class="auth-card">
     <div class="auth-logo-badge">
       <span class="auth-logo-icon">📧</span>
