@@ -1,5 +1,5 @@
 // EDUCA Mail · Google Gmail Engine Architecture v3.0
-const API_BASE = window.MAIL_SERVER_URL || 'https://messages-backend-e6pe.onrender.com';
+// API_BASE resolved globally from config.js
 
 let ME = null;
 let currentFolder = 'inbox';
