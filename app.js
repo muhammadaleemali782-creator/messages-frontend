@@ -1,3 +1,13 @@
+
+function formatMessageBody(text) {
+  if (!text) return '<span style="color:#94a3b8; font-style:italic;">(Empty message body)</span>';
+  let escaped = esc(text);
+  
+  // Highlight 6-digit OTP codes in prominent badge
+  escaped = escaped.replace(/\b(\d{6})\b/g, '<span style="display:inline-block; padding:4px 10px; margin:4px 0; background:rgba(251,191,36,0.2); border:1px solid #fbbf24; border-radius:8px; color:#fbbf24; font-size:18px; font-weight:900; letter-spacing:2px; font-family:monospace;">$1</span>');
+  
+  return escaped;
+}
 // app.js - Full Interactive Engine with Bearer Token & Working Controls
 
 let ME = null;
@@ -238,7 +248,7 @@ async function openThread(id, clickedEl){
             <div class="to-line">To: ${esc(msg.to)}</div>
           </div>
         </div>
-        <div class="content">${esc(msg.body)}</div>
+        <div class="content">${formatMessageBody(msg.body)}</div>
       </div>
     </div>
   `;
