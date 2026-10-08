@@ -253,6 +253,11 @@ button, input, textarea {
   width: 100vw;
   background: var(--gmail-bg);
   overflow: hidden;
+  transition: grid-template-columns 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app.sidebar-collapsed {
+  grid-template-columns: 68px 360px 1fr;
 }
 
 /* ================= 1. DESKTOP SIDEBAR ================= */
@@ -264,13 +269,84 @@ button, input, textarea {
   padding: 16px 12px;
   gap: 12px;
   height: 100vh;
+  transition: padding 0.2s ease, width 0.2s ease;
 }
 
 .sidebar-brand-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 8px 8px 8px;
+  padding: 0 4px 8px 4px;
+}
+
+.btn-sidebar-collapse {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+.btn-sidebar-collapse:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}
+
+.sidebar.collapsed {
+  padding: 16px 6px;
+  align-items: center;
+}
+.sidebar.collapsed .sidebar-brand-row {
+  justify-content: center;
+  padding: 0 0 8px 0;
+  gap: 0;
+}
+.sidebar.collapsed .gmail-brand-text,
+.sidebar.collapsed .sidebar-brand-logo {
+  display: none !important;
+}
+.sidebar.collapsed .desktop-compose-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  justify-content: center;
+  margin: 0 auto;
+}
+.sidebar.collapsed .compose-text {
+  display: none !important;
+}
+.sidebar.collapsed .compose-ico {
+  font-size: 20px;
+}
+.sidebar.collapsed .drawer-item {
+  justify-content: center;
+  padding: 10px 0;
+  width: 44px;
+  border-radius: 50%;
+  margin: 2px auto;
+}
+.sidebar.collapsed .drawer-label,
+.sidebar.collapsed .drawer-badge {
+  display: none !important;
+}
+.sidebar.collapsed .drawer-logout-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  justify-content: center;
+  margin: 0 auto;
+  overflow: hidden;
+}
+.sidebar.collapsed .drawer-logout-btn span:not(:first-child) {
+  display: none;
 }
 
 .gmail-logo-icon { font-size: 22px; }
@@ -1914,7 +1990,43 @@ html, body {
   font-size: 12.5px;
   font-weight: 700;
   text-align: center;
-  padding: 8px 16px;
+  padding: 4px 8px;
+}
+
+.compose-bottom-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid #f1f5f9;
+  background: #fafafa;
+}
+
+.btn-compose-send-bottom {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.28);
+  transition: all 0.15s ease;
+}
+
+.btn-compose-send-bottom:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.35);
+}
+
+.btn-compose-send-bottom:active {
+  transform: translateY(0);
 }
 
 /* Full Screen Mobile View for Compose */

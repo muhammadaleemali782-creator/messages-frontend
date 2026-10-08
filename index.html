@@ -119,7 +119,10 @@
   <!-- Desktop Side Drawer -->
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-brand-row">
-      <img src="educa_logo.png" alt="EDUCA" style="width:28px;height:28px;border-radius:50%;object-fit:contain;background:#fff;padding:1px;box-shadow:0 0 10px rgba(251,191,36,0.25);" />
+      <button id="sidebarCollapseBtn" type="button" class="btn-sidebar-collapse" title="Collapse / Expand sidebar">
+        <span style="font-size: 18px; line-height: 1;">☰</span>
+      </button>
+      <img src="educa_logo.png" alt="EDUCA" class="sidebar-brand-logo" style="width:28px;height:28px;border-radius:50%;object-fit:contain;background:#fff;padding:1px;box-shadow:0 0 10px rgba(251,191,36,0.25);" />
       <span class="gmail-brand-text">EDUCA Mail</span>
     </div>
 
@@ -364,18 +367,13 @@
       <div class="compose-body-area">
         <textarea id="cBody" placeholder="Compose email..."></textarea>
       </div>
-      <div id="composeMsg" class="compose-status-msg"></div>
-    </div>
-  </div>
-</div>
-      <div class="compose-line-field">
-        <label>Subject</label>
-        <input id="cSubject" placeholder="Subject" autocomplete="off">
+      <div class="compose-bottom-toolbar">
+        <button id="composeSendBottomBtn" type="button" class="btn-compose-send-bottom" title="Send email">
+          <span>Send Message</span>
+          <span style="font-size: 15px;">➔</span>
+        </button>
+        <div id="composeMsg" class="compose-status-msg"></div>
       </div>
-      <div class="compose-body-area">
-        <textarea id="cBody" placeholder="Compose email..."></textarea>
-      </div>
-      <div id="composeMsg" class="compose-status-msg"></div>
     </div>
   </div>
 </div>

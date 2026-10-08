@@ -286,8 +286,10 @@ function getFilteredMessages(){
     if (currentFolder === 'starred') return starredIds.has(id);
 
     if (currentFolder === 'sent') {
+      if (trashedIds.has(id)) return false;
       const myId = (ME?.identifier || localStorage.getItem('educa_cached_identifier') || '').toLowerCase();
-      return (m.from || '').toLowerCase().includes(myId.split('@')[0]);
+      const myBase = myId.split('@')[0];
+      return myBase ? (m.from || '').toLowerCase().includes(myBase) : false;
     }
 
     if (currentFolder === 'drafts') return false;
@@ -295,6 +297,12 @@ function getFilteredMessages(){
     // Inbox
     if (currentFolder === 'inbox') {
       if (trashedIds.has(id) || archivedIds.has(id) || spamIds.has(id)) return false;
+      const myId = (ME?.identifier || localStorage.getItem('educa_cached_identifier') || '').toLowerCase();
+      const myBase = myId.split('@')[0];
+      const fromMe = myBase && (m.from || '').toLowerCase().includes(myBase);
+      const toMe = myBase && (m.to || '').toLowerCase().includes(myBase);
+      // Pure outbound emails to other users belong strictly in Sent
+      if (fromMe && !toMe) return false;
     }
 
     // Category filter
@@ -658,6 +666,12 @@ function openCompose(to='', subj='', body=''){
   document.getElementById('cBody').value = body;
   document.getElementById('composeMsg').textContent = '';
   document.getElementById('userSuggestionsDropdown')?.classList.add('hidden');
+  const fromEl = document.getElementById('composeFromEmail');
+  if (fromEl) {
+    const cachedId = localStorage.getItem('educa_cached_identifier');
+    const myId = ME?.email || ME?.identifier || cachedId || 'user@educaveda.com';
+    fromEl.textContent = myId.includes('@') ? myId : `${myId}@educaveda.com`;
+  }
   document.getElementById('composeOverlay').classList.remove('hidden');
 }
 
@@ -861,11 +875,28 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Mobile Menu Drawer Toggle
-  document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
-    document.getElementById('appSidebar')?.classList.toggle('mobile-open');
-    document.getElementById('sidebarBackdrop')?.classList.toggle('hidden');
-  });
+  // Sidebar Collapse & Mobile Drawer Toggle
+  const isSidebarCollapsed = localStorage.getItem('educa_sidebar_collapsed') === 'true';
+  if (isSidebarCollapsed && window.innerWidth > 768) {
+    document.querySelector('.app')?.classList.add('sidebar-collapsed');
+    document.getElementById('appSidebar')?.classList.add('collapsed');
+  }
+
+  const toggleSidebar = () => {
+    if (window.innerWidth <= 768) {
+      document.getElementById('appSidebar')?.classList.toggle('mobile-open');
+      document.getElementById('sidebarBackdrop')?.classList.toggle('hidden');
+    } else {
+      const appEl = document.querySelector('.app');
+      const sidebarEl = document.getElementById('appSidebar');
+      const collapsed = appEl?.classList.toggle('sidebar-collapsed');
+      sidebarEl?.classList.toggle('collapsed', collapsed);
+      localStorage.setItem('educa_sidebar_collapsed', collapsed ? 'true' : 'false');
+    }
+  };
+
+  document.getElementById('sidebarCollapseBtn')?.addEventListener('click', toggleSidebar);
+  document.getElementById('mobileMenuBtn')?.addEventListener('click', toggleSidebar);
   document.getElementById('sidebarBackdrop')?.addEventListener('click', () => {
     document.getElementById('appSidebar')?.classList.remove('mobile-open');
     document.getElementById('sidebarBackdrop')?.classList.add('hidden');
@@ -877,6 +908,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('composeCloseBtn')?.addEventListener('click', closeCompose);
   document.getElementById('composeDiscardBtn')?.addEventListener('click', closeCompose);
   document.getElementById('sendComposeBtn')?.addEventListener('click', sendCompose);
+  document.getElementById('composeSendBottomBtn')?.addEventListener('click', sendCompose);
 
   // Logout Buttons
   document.getElementById('dialogLogoutBtn')?.addEventListener('click', logout);
