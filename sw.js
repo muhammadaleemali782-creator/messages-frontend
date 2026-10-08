@@ -5,5 +5,10 @@ self.addEventListener('activate', (e) => {
   );
 });
 self.addEventListener('fetch', (e) => {
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  e.respondWith(
+    fetch(e.request).catch(async () => {
+      const match = await caches.match(e.request);
+      return match || new Response('Network error', { status: 503, statusText: 'Service Unavailable' });
+    })
+  );
 });

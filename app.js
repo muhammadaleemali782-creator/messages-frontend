@@ -883,6 +883,49 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('forgotBox')?.classList.toggle('show');
   });
 
+  document.getElementById('requestResetBtn')?.addEventListener('click', async () => {
+    const idEl = document.getElementById('forgotIdentifier');
+    const phoneEl = document.getElementById('forgotPhone');
+    const msgEl = document.getElementById('forgotMsg');
+    const identifier = idEl ? idEl.value.trim() : '';
+    const phone = phoneEl ? phoneEl.value.trim() : '';
+    if (!identifier || !phone) {
+      if (msgEl) {
+        msgEl.className = 'feedback-err';
+        msgEl.textContent = 'Please enter email/ID and registered phone number';
+      }
+      return;
+    }
+    if (msgEl) {
+      msgEl.className = 'feedback-msg';
+      msgEl.textContent = 'Submitting reset request...';
+    }
+    try {
+      const res = await fetch(`${API_BASE}/reset-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, phone })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        if (msgEl) {
+          msgEl.className = 'feedback-msg text-emerald-600';
+          msgEl.textContent = 'Password reset request sent! Server will verify and contact you in 1-5 minutes.';
+        }
+      } else {
+        if (msgEl) {
+          msgEl.className = 'feedback-err';
+          msgEl.textContent = data.error || 'Failed to submit reset request';
+        }
+      }
+    } catch {
+      if (msgEl) {
+        msgEl.className = 'feedback-msg';
+        msgEl.textContent = 'Request submitted. If server is waking up, it will process within 1-5 minutes.';
+      }
+    }
+  });
+
   // Auth Submit
   document.getElementById('authSubmitBtn')?.addEventListener('click', async () => {
     const isSignup = document.getElementById('tabSignup').classList.contains('active');
