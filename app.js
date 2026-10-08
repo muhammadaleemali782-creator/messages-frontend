@@ -72,6 +72,26 @@ function formatMessageBody(text) {
     `;
   });
 
+  // Detect URLs and render clickable links & prominent action button for reset password
+  const urlRegex = /(https?:\/\/[^\s<]+)/g;
+  escaped = escaped.replace(urlRegex, (url) => {
+    const cleanUrl = url.replace(/[.,;!]+$/, '');
+    const isReset = cleanUrl.includes('reset-password');
+    if (isReset) {
+      return `
+        <div style="margin: 18px 0; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; text-align: center;">
+          <a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #2563eb; color: #ffffff; font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 12px rgba(37,99,235,0.25);">
+            🔐 Reset Password Now →
+          </a>
+          <div style="margin-top: 10px; font-size: 11px; color: #64748b; word-break: break-all;">
+            Direct link: <a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">${cleanUrl}</a>
+          </div>
+        </div>
+      `;
+    }
+    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline; word-break: break-all;">${cleanUrl}</a>`;
+  });
+
   return escaped;
 }
 
